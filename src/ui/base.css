@@ -29,3 +29,18 @@ body {
   width: 100%;
   height: 100%;
 }
+
+#fps {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+  z-index: 20;
+  padding: 6px 12px;
+  font:
+    600 20px/1.2 ui-monospace,
+    monospace;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  pointer-events: none;
+}
