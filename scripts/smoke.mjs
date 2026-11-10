@@ -44,10 +44,26 @@ async function run() {
 
   await page.goto(BASE);
   await page.waitForSelector('canvas');
-  await page.waitForTimeout(1000);
 
+  // Il modello è caricato (golden) o è comparso il segnaposto; con SMOKE_EXPECT si pretende l'uno o l'altro.
+  await page.waitForSelector('body[data-ready]', { timeout: 30_000 });
+  const ready = await page.evaluate(() => document.body.dataset.ready);
+  const expected = process.env.SMOKE_EXPECT ?? 'golden';
+  if (ready !== expected) throw new Error(`data-ready=${ready}, atteso ${expected}`);
+
+  // Il contatore fps mostra un numero maggiore di zero.
+  await page.waitForFunction(
+    () => {
+      const n = Number.parseInt(document.getElementById('fps')?.textContent ?? '', 10);
+      return n > 0;
+    },
+    undefined,
+    { timeout: 15_000 },
+  );
+
+  // Il segnaposto scrive un avviso voluto: non è un errore.
   if (errors.length) throw new Error(`errori in console:\n${errors.join('\n')}`);
-  console.log('smoke: ok');
+  console.log(`smoke: ok (${ready})`);
 }
 
 run()
