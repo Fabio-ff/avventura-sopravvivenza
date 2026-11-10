@@ -1,7 +1,7 @@
 # Avventura-Sopravvivenza — Progetto di gioco e piano MVP
 
 Data: 2026-11-10. Autori: Fabio e Filippo (9 anni), con Claude.
-Stato: approvato da Fabio il 2026-11-10.
+Stato: approvato da Fabio il 2026-11-10; rivisto il 2026-11-10 (scatola grigia, palestra, modalità modifica, metodo di lavoro).
 
 ---
 
@@ -39,11 +39,11 @@ Cinque esploratori selezionabili, **funzionalmente diversi** ma con la regola fe
 missione è completabile da tutti**: le abilità cambiano il *come*, mai il *se*. Ogni ostacolo ha
 una soluzione base per chiunque; le abilità aprono scorciatoie, strade alternative o segreti.
 
-| Personaggio | Stato asset | Abilità proposta (da confermare con Filippo) |
+| Personaggio | Stato asset | Abilità (confermate) |
 |---|---|---|
 | **Golden** (da RoarBall) | GLB pronto, 7 clip | Esploratrice "di base": nessuna abilità speciale, affronta ogni ostacolo con la soluzione standard. Serve anche a garantire che la soluzione base esista sempre. |
 | **Ninja** | solo illustrazione | Agile: salta più in alto/lungo, si arrampica meglio. |
-| **Golem** | solo illustrazione | Forte: spinge massi pesanti, resiste ai colpi (perde meno vite). |
+| **Golem** | solo illustrazione | Forte: spinge massi pesanti, ha una vita in più. |
 | **Mago** | solo illustrazione | Magia: illumina il buio, rivela sentieri o oggetti nascosti. |
 | **Vichinga** | solo illustrazione | Combattente: colpisce meglio, sfonda ostacoli fragili con la mazza. |
 
@@ -74,9 +74,9 @@ percorso suggerito); le successive lo sono sempre meno, fino a procedere "alla c
 
 ### 2.6 Regole di vita e fallimento
 Il personaggio ha una riserva di **vite/punti**. Ogni colpo subito o trappola scattata ne toglie
-una. A zero vite si **riparte dall'inizio della missione**. *(Mia nota: missioni corte, oppure un
-punto di controllo a metà nelle missioni lunghe; per la missione 1 propongo un punto di controllo
-all'ingresso del tempio, da confermare.)*
+una. A zero vite si **riparte dall'inizio della missione**, oppure dall'ultimo **punto di
+controllo** se è stato raggiunto. Nella missione 1 il punto di controllo è all'ingresso del tempio
+(dettagli in §10).
 
 ### 2.7 Avversari (dalla missione 2 in poi)
 Creature del posto, guardiani lasciati a difesa del tesoro, ed **esploratori rivali** controllati dal
@@ -89,8 +89,13 @@ da un bambino di 9 anni. Gioco nel **browser**, desktop e tablet (tastiera, game
 RoarBall.
 
 ### 2.9 Coinvolgimento di Filippo (criterio di progetto)
-- Le missioni vivono in **file di dati** separati dal codice (posizioni, testi, quantità, enigmi),
-  così Filippo può cambiarle con Fabio senza toccare il motore.
+- Le missioni vivono in **file di dati** separati dal codice (posizioni, testi, quantità, enigmi).
+- **Modalità modifica nel gioco** (opzione URL `?edit`): Filippo cammina nel livello e con un tasto
+  posa, sposta o toglie banane, trappole e cartelli; un pulsante esporta il risultato come dati
+  della missione, che Fabio incolla nel file. Il labirinto si disegna come griglia di caratteri.
+  Modificare il file a mano resta possibile, ma non è la via principale per Filippo.
+- **Palestra** (opzione URL `?level=palestra`): stanza di prova con un esemplare di ogni elemento,
+  dove provare controlli, abilità e trappole senza giocare la missione.
 - Ogni fase del piano ha un **"momento per Filippo"**: qualcosa da vedere, provare o decidere.
 - Una **modalità debug** (opzione URL) per saltare a qualsiasi tappa della missione e provarla subito.
 
@@ -133,10 +138,11 @@ sentiero nascosto nel labirinto (base: tentativi; Mago: lo rivela), grata fragil
   sul crinale; suggerimenti di tutorial.
 - **Scena punta e clicca** delle scimmie (prima persona, hotspot cliccabili, inventario, testi).
 - **Tempio**: corridoio con fossati e trappole (martello/roccia a tempo o a pressione), **vite** con
-  HUD, ripartenza da capo a zero vite (con eventuale punto di controllo all'ingresso del tempio).
+  HUD, ripartenza a zero vite, punto di controllo all'ingresso del tempio.
 - **Labirinto** e **camera del tesoro**; schermata di vittoria con **indizio** verso la missione 2.
 - **Abilità** dei 5 personaggi applicate ai 4 punti elencati sopra.
-- **Salvataggio locale** (personaggio scelto, missione completata, punteggio esploratore).
+- **Salvataggio locale** (personaggio scelto, missione completata, stelle).
+- **Palestra** di prova e **modalità modifica** per Filippo (§2.9), contatore di fps a schermo.
 - Suoni essenziali sintetizzati (riuso motore audio RoarBall), senza file audio.
 - **Deploy** automatico su GitHub Pages, CI con lint/build/test, smoke test Playwright.
 
@@ -160,8 +166,7 @@ può adottare Rapier solo se le collisioni del tempio lo richiedono davvero.
 ### 5.2 Riuso da RoarBall (copiare e adattare, percorsi sotto `/Users/fabio/Projects/Roarball/`)
 - Pipeline asset: `scripts/asset-pipeline/*` + manifest `sources/characters/ace.json`.
 - Modello Golden: `public/assets/characters/ace.glb` (clip: idle, run, jump, hit, fall; dribble e
-  shoot si scartano). Lo scheletro è Mixamo-compatibile: walk/crouch/climb/push si aggiungono da
-  Mixamo e si fondono nel GLB con gltf-transform, senza ripassare da Tripo.
+  shoot si scartano). Nell'MVP si usano solo queste clip; le clip Mixamo sono rimandate (§10).
 - Caricamento modelli: `src/render/model-cache.ts` (timeout + fallback segnaposto).
 - Personaggio animato: `src/render/character-view.ts`, `src/render/clip-for.ts`,
   `src/render/character-preview.ts` (anteprima nel menu).
@@ -188,6 +193,8 @@ può adottare Rapier solo se le collisioni del tempio lo richiedono davvero.
   finale) + `characters.json` (profili abilità, testi). Caricati da un loader validato (schema).
 - `hud/` — vite, inventario, obiettivo corrente, mappa (sbloccabile), suggerimenti.
 - `save/` — progresso in localStorage.
+- `editor/` — modalità modifica: posa/sposta/togli elementi, esporta i dati della missione.
+- `missions/palestra/` — livello di prova con un esemplare di ogni tipo di elemento.
 
 Principio: il motore non conosce la missione 1; conosce tipi di elementi (raccoglibile, trigger,
 trappola a tempo, fossato, porta con condizione, hotspot, labirinto) e la missione li compone.
@@ -198,60 +205,99 @@ oggetti "eroe" (porta del tempio, scrigno, scimmie, banane, martello-trappola) g
 come modelli statici (export gratuito sufficiente perché non serve rig) oppure modellati come
 primitive. Le illustrazioni esistenti vanno in `public/assets/art/` per card e schermate.
 
+**Modelli a carico di Fabio (Tripo Studio, statici).** Ogni modello ha una primitiva di riserva
+già nel gioco, quindi nessuna fase resta bloccata: quando il GLB arriva in `sources/raw/` si
+sostituisce con un task da pochi minuti. Vanno preparati durante la fase precedente.
+
+| Serve in fase | Modelli | Riserva |
+|---|---|---|
+| 4 (scimmie) | scimmia (uno, ripetuto), banana, porta del tempio | sfere e scatole colorate |
+| 5 (tempio) | martello-trappola, roccia, scrigno del tesoro | cilindro, sfera, scatola |
+
 ### 5.5 Test
-Vitest sulla logica pura (profili abilità, macchina a stati del player, risoluzione enigma scimmie,
-trappole a tempo, labirinto, loader missione con schema). Smoke Playwright: carica, sceglie Golden,
+Solo logica pura, niente test su rendering o DOM, suite sotto i 30 secondi in CI.
+Vitest su (profili abilità, macchina a stati del player, risoluzione enigma scimmie,
+trappole a tempo, labirinto, loader missione con schema, stelle). Smoke Playwright: carica, sceglie Golden,
 entra in gioco, salta via URL alla camera del tesoro, verifica schermata vittoria.
 
 ---
 
 ## 6. Piano per fasi
 
-Ogni fase chiude con qualcosa di giocabile nel browser e un momento per Filippo.
+Ogni fase chiude con qualcosa di giocabile all'indirizzo pubblico, una prova sul tablet Android
+con il contatore di fps, e un momento per Filippo. Dalla fase 2 in poi la missione è sempre
+giocabile dall'inizio alla vittoria: le fasi successive sostituiscono i segnaposto, una tappa alla volta.
 
 | # | Fase | Contenuto | Momento per Filippo |
 |---|---|---|---|
-| 0 | **Bootstrap** | Repo, stack copiato da RoarBall, CI + Pages, Golden caricato in una scena vuota con idle. | Vede Golden "viva" nel browser all'indirizzo pubblico. |
-| 1 | **Muoversi** | Controller terza persona, camera, terreno di prova, salto, accovacciarsi, input tastiera/gamepad/touch, HUD vite. | Prova i controlli e decide quanto deve saltare Golden. |
-| 2 | **La foresta** | Terreno con radura, crinale, fiume, tempio in lontananza; kit alberi/rocce; banane; mappa sbloccabile dal crinale; suggerimenti tutorial; dati in `mission.json`. | Sceglie dove nascondere le banane e scrive i cartelli del tutorial. |
-| 3 | **Le scimmie** | Modalità punta e clicca: passaggio di camera, hotspot, inventario, enigma banane, testi. | Scrive cosa dicono le scimmie e quante banane servono. |
-| 4 | **Il tempio** | Interni, fossati, trappole martello/roccia, perdita vite, ripartenza, punto di controllo. | Decide dove stanno le trappole e con quale ritmo scattano. |
-| 5 | **Labirinto e tesoro** | Labirinto da pianta nei dati, camera del tesoro, vittoria, indizio, salvataggio. | Disegna il labirinto su carta, lo trascriviamo nei dati. |
-| 6 | **I cinque esploratori** | Selezione personaggio con card, segnaposto, profili abilità, i 4 punti del livello con soluzione base + scorciatoia. | Prova la stessa tappa con due personaggi diversi. |
-| 7 | **Rifinitura** | Suoni, prestazioni su tablet, test di gioco completo, correzioni, README. | Partita completa cronometrata; raccolta idee per la missione 2. |
+| 0 | **Bootstrap** | Repo con lo stack copiato da RoarBall, CI + Pages, Golden in una scena vuota con idle, contatore fps, `CLAUDE.md` e `docs/STATO.md`. | Vede Golden "viva" sul tablet all'indirizzo pubblico. |
+| 1 | **Muoversi** | Controller terza persona, camera (anche touch), **profili abilità** dei 5 personaggi selezionabili da URL, vite e HUD, **palestra** con fossato, gradino, muro, masso e trappola mobile. Qui si decide il sistema di collisioni. | Prova i cinque profili in palestra e decide quanto salta ciascuno. |
+| 2 | **Missione in scatola grigia** | Tutta la missione 1 con cubi e segnaposto: loader dei dati, raccoglibili, trigger, porta con condizione banane, fossati, trappola a tempo, labirinto da griglia, tesoro, vittoria con stelle, punto di controllo, salvataggio, salto di tappa da URL, **modalità modifica**. | Gioca la missione intera e sposta banane e trappole con la modalità modifica. |
+| 3 | **La foresta** | Terreno vero con radura, crinale, fiume, tempio in lontananza; kit alberi e rocce con instancing; mappa sbloccabile; suggerimenti tutorial. | Scrive i cartelli del tutorial e nasconde le banane. |
+| 4 | **Le scimmie** | Modalità punta e clicca al posto della porta segnaposto: passaggio di camera, hotspot, inventario, enigma banane, testi. | Scrive cosa dicono le scimmie e quante banane servono. |
+| 5 | **Il tempio** | Interni veri, trappole martello e roccia, labirinto arredato, camera del tesoro, indizio finale. | Disegna il labirinto su carta e lo trascrive nella griglia. |
+| 6 | **I cinque esploratori** | Schermata di selezione con le card, segnaposto dei quattro, messa a punto delle quattro scorciatoie. | Prova la stessa tappa con due personaggi diversi. |
+| 7 | **Rifinitura** | Suoni, prestazioni, partita completa di prova, correzioni, README. | Partita cronometrata; idee per la missione 2 in `docs/idee-filippo.md`. |
 
 Dopo l'MVP: missione 2 (deserto o zona indicata dall'indizio) con combattimento, rivali e guardiani;
-modelli Tripo dei quattro esploratori; mappa del pianeta.
+modelli Tripo dei quattro esploratori; clip Mixamo; mappa del pianeta.
 
 ---
 
-## 7. Metodo di lavoro (confermato da Fabio il 2026-11-10)
+## 7. Metodo di lavoro (confermato da Fabio il 2026-11-10, ottimizzato il 2026-11-10)
 
-- Ogni task del piano: issue GitHub, branch, implementazione da subagente **Sonnet** (Haiku per
-  chores banali), PR, merge solo con `gh pr checks` verdi.
-- **Revisioni ricorrenti con Opus**: revisione di ogni PR prima del merge, più un riesame di fine
-  fase sull'intero risultato rispetto a questo documento.
-- La sessione principale (Fable) fa **solo progettazione**: decisioni, brainstorming, stesura di
-  spec e piani, riesame finale. Niente lavoro meccanico in sessione principale.
-- Igiene del contesto: dire "safe to /compact" dopo ogni task mergiato e "safe to /clear" prima di
-  una nuova fase, dopo aver scritto l'handoff (spec, piano, file di memoria, epic GitHub). Mai
-  suggerire clear con un subagente in corso.
-- Documenti durevoli nel repo: `docs/superpowers/specs/` (questo design),
-  `docs/superpowers/plans/` (piani per fase).
+Obiettivo: massima resa con il minimo consumo di token. La sessione principale è la più costosa,
+quindi resta piccola; il lavoro passa a modelli più economici con istruzioni brevi e complete.
+
+**Ruoli**
+- **Fable (sessione principale)**: solo progettazione. Decisioni, piano di fase, brief dei task,
+  riesame di fine fase. Non legge codice se non serve a una decisione, non esegue lavoro meccanico.
+- **Sonnet**: implementa i task. **Haiku**: lavori banali (copie da RoarBall, configurazioni,
+  sostituzione di un modello, refusi).
+- **Opus**: revisione. Sempre a fine fase, sul diff dell'intera fase rispetto alla specifica.
+  Sulla singola PR solo quando tocca il motore: `player/`, collisioni, `camera/`, `pnc/`, loader
+  missioni, `save/`. Le PR di soli dati, testi, asset o stile passano con CI verde e smoke test.
+
+**Piani corti, una fase alla volta**
+- Il piano di una fase si scrive appena prima di eseguirla, in `docs/superpowers/plans/`, e sta
+  in una o due pagine: 4–7 task, ciascuno con obiettivo, file toccati, criteri di accettazione e
+  pezzi di RoarBall da copiare. **Niente codice nel piano**: lo scrive chi implementa.
+- Task grandi abbastanza da valere una PR ciascuno. Un solo issue per fase (epic con la lista dei
+  task), non un issue per task.
+
+**Brief e rapporti**
+- Ogni subagente riceve un brief autosufficiente: il task, i percorsi esatti, i criteri di
+  accettazione, il comando di verifica. Non deve leggere la specifica intera né esplorare il repo.
+- `CLAUDE.md` nel repo, breve: comandi, struttura delle cartelle, convenzioni. Evita che ogni
+  subagente riscopra il progetto.
+- Il subagente risponde in al massimo dieci righe: cosa ha fatto, esito di `npm run check`, link
+  alla PR, eventuali dubbi. Niente diff né log nel rapporto.
+- Il revisore legge `gh pr diff`, non il repo intero, e risponde con soli problemi bloccanti e
+  non bloccanti.
+- Riuso prima di riscrittura: i pezzi di RoarBall si copiano con `cp` e si adattano, non si rigenerano.
+- Task indipendenti della stessa fase partono in parallelo, ciascuno nel proprio worktree.
+
+**Stato fuori dalla sessione**
+- `docs/STATO.md`: poche righe con fase corrente, task fatti, prossimo passo, decisioni recenti.
+  Si aggiorna a ogni merge, insieme al punto di ripresa in memoria.
+- Commit e push dopo ogni task; merge solo con `gh pr checks` verdi.
+- **Una fase, una sessione.** Dopo ogni task mergiato: "safe to /compact". A fine fase, dopo il
+  riesame Opus e l'aggiornamento di `STATO.md`: "safe to /clear". Mai con un subagente in corso.
 
 ---
 
 ## 8. Verifica dell'MVP
 
 1. `npm run check` verde (lint, format, build, test) in locale e in CI.
-2. Smoke Playwright: titolo → selezione Golden → gioco → salto via URL alla camera del tesoro →
+2. Contatore fps sul tablet Android: 30 fps stabili nella foresta e nel tempio.
+2b. Smoke Playwright: titolo → selezione Golden → gioco → salto via URL alla camera del tesoro →
    schermata vittoria con indizio.
 3. Partita manuale completa su desktop (tastiera) e su tablet (touch) dall'indirizzo Pages:
    orientamento con entrambe le strade, scimmie risolte, almeno una morte per trappola con ripartenza,
    labirinto, tesoro.
 4. La stessa partita con un segnaposto (es. Ninja) verificando la scorciatoia del fossato.
-5. Filippo modifica un valore in `mission.json` (posizione di una banana o testo) e lo vede nel gioco
-   senza che nessuno tocchi il codice.
+5. Filippo sposta una banana e una trappola con la modalità modifica, Fabio incolla i dati
+   esportati, e il cambiamento si vede nel gioco senza toccare il codice.
 
 ---
 
@@ -260,7 +306,7 @@ modelli Tripo dei quattro esploratori; mappa del pianeta.
 Dettagli del controller (velocità, gravità, coyote time), forma del terreno e densità degli alberi,
 schema esatto dei file missione, come rappresentare il labirinto (griglia ASCII nei dati è la mia
 preferenza), scelta tra Kenney/Quaternius/Tripo per ogni oggetto, struttura precisa delle schermate,
-tonalità dei suoni, come fondere clip Mixamo nel GLB.
+tonalità dei suoni, formato dei dati esportati dalla modalità modifica.
 
 ## 10. Decisioni prese dopo il controllo del revisore (2026-11-10)
 
@@ -289,8 +335,13 @@ tonalità dei suoni, come fondere clip Mixamo nel GLB.
   salto del Ninja (muri del labirinto e bordi più alti della sua portata). Le scorciatoie non
   previste che emergono in test sono benvenute, non bug.
 - **Valori provvisori prima, Filippo dopo**: i subagenti usano valori iniziali (posizioni banane,
-  testi, pianta del labirinto, tempi trappole) e il "momento per Filippo" diventa modificare i
-  file di dati con Fabio e vedere il risultato. Nessuna fase resta bloccata in attesa.
+  testi, pianta del labirinto, tempi trappole) e Filippo li cambia con la modalità modifica o,
+  per i testi e il labirinto, nei file di dati con Fabio. Nessuna fase resta bloccata in attesa.
+- **Camera su touch**: segue da dietro in automatico, senza bisogno di comandarla; trascinare sulla
+  metà destra dello schermo la ruota. Joystick flottante a sinistra, pulsanti salto, accovacciati
+  e interagisci a destra. Si mette a punto in palestra nella fase 1.
+- **Collisioni**: si decidono nella fase 1 sulla palestra. Punto di partenza: capsula contro
+  scatole allineate agli assi e altezza del terreno, dato che tempio e labirinto sono su griglia.
 - **Illustrazioni**: i sei JPEG inviati in sessione (globo, mappa, golem, ninja, mago, vichinga)
   vanno copiati in fase 0 in `public/assets/art/` e in `sources/art/`; se Fabio ha originali a
   risoluzione maggiore li sostituirà. La card di Golden usa `sources/raw/golden-medieval-princess.jpeg`
