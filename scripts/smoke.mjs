@@ -3,7 +3,9 @@ import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 
 const PORT = 4173;
-const BASE = `http://localhost:${PORT}/`;
+// Rispetta BASE_PATH (es. /avventura-sopravvivenza/), come la build; in locale vale /.
+const BASE_PATH = process.env.BASE_PATH ?? '/';
+const BASE = `http://localhost:${PORT}${BASE_PATH}`;
 const server = spawn(
   process.execPath,
   ['node_modules/vite/bin/vite.js', 'preview', '--port', String(PORT), '--strictPort'],
