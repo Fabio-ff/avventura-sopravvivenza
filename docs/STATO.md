@@ -5,9 +5,10 @@
 ## Fatto
 - Specifica e piano della fase 0.
 - Task 1 (in PR `fase0/impalcatura`): impalcatura, CI, deploy su Pages, scena vuota.
+- Task 2 (in revisione, PR `fase0/golden-idle`, impilata sulla PR del Task 1): Golden in idle, segnaposto se il GLB manca, contatore fps (`?fps=0` lo nasconde), smoke con `data-ready`.
 
 ## Prossimo passo
-- Task 2: Golden in idle e contatore fps (`fase0/golden-idle`).
+- Revisione del Task 2, poi Task 3 (chiusura di fase).
 - Attivare GitHub Pages (sorgente "GitHub Actions") dopo il merge del Task 1.
 
 ## Decisioni recenti
