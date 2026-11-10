@@ -16,9 +16,12 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run lint
-      - run: npm run format:check
-      - run: npm run build
+      - run: npm run check
       - run: npx playwright install --with-deps chromium
       - run: npm run smoke
-      - run: npm test
+      - name: Build e smoke con la base di Pages
+        run: |
+          npm run build
+          npm run smoke
+        env:
+          BASE_PATH: /avventura-sopravvivenza/

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GameLoop } from './app/game-loop';
 import { readUrlOptions } from './app/url-options';
+import { rendererSettings } from './render/renderer-settings';
 import { CharacterView } from './render/character-view';
 import { instantiate, loadCharacterModel } from './render/model-cache';
 import { FpsCounter } from './ui/debug-overlay';
@@ -74,15 +75,34 @@ async function start(): Promise<void> {
 
   let renderer: THREE.WebGLRenderer;
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({
+      antialias: rendererSettings(window.devicePixelRatio).antialias,
+    });
   } catch {
     showError(app, 'Il tuo browser non supporta WebGL: impossibile avviare il gioco.');
     return;
   }
   // Budget tablet: niente ombre dinamiche, pixel ratio limitato a 2.
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(rendererSettings(window.devicePixelRatio).pixelRatio);
   renderer.shadowMap.enabled = false;
   app.appendChild(renderer.domElement);
+
+  // Contesto WebGL perso (tablet, memoria): messaggio breve finché non torna.
+  let lostNotice: HTMLParagraphElement | null = null;
+  renderer.domElement.addEventListener('webglcontextlost', (event) => {
+    event.preventDefault();
+    if (lostNotice) return;
+    lostNotice = document.createElement('p');
+    lostNotice.id = 'context-lost';
+    lostNotice.textContent = 'Grafica interrotta: sto provando a riprendere...';
+    lostNotice.style.cssText =
+      'position:fixed;left:0;right:0;top:40%;margin:0;padding:1rem;font-size:1.25rem;text-align:center;background:rgba(0,0,0,0.6)';
+    document.body.appendChild(lostNotice);
+  });
+  renderer.domElement.addEventListener('webglcontextrestored', () => {
+    lostNotice?.remove();
+    lostNotice = null;
+  });
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(SKY);
@@ -135,24 +155,37 @@ async function start(): Promise<void> {
     ? new FpsCounter(document.body)
     : null;
 
-  const loaded = await loadCharacterModel('characters/golden.glb');
   let view: CharacterView | null = null;
-  if (loaded) {
-    const model = instantiate(loaded);
-    normalize(model.scene);
-    view = new CharacterView(model);
-    scene.add(view.group);
+  try {
+    const loaded = await loadCharacterModel('characters/golden.glb');
+    if (loaded) {
+      const model = instantiate(loaded);
+      normalize(model.scene);
+      view = new CharacterView(model);
+      scene.add(view.group);
+    }
+  } catch (error) {
+    // GLB malformato o clip mancanti: si ripiega sul segnaposto, mai schermo vuoto.
+    console.warn('[model] segnaposto per characters/golden.glb', error);
+    view = null;
+  }
+  if (view) {
+    document.body.dataset.ready = 'golden';
   } else {
     scene.add(createPlaceholder());
+    document.body.dataset.ready = 'segnaposto';
   }
-  document.body.dataset.ready = loaded ? 'golden' : 'segnaposto';
 
-  const loop = new GameLoop((dt) => {
+  const loop = new GameLoop((dt, rawDt) => {
     view?.update('idle', dt);
-    counter?.update(dt);
+    counter?.update(rawDt);
     renderer.render(scene, camera);
   });
   loop.start();
 }
 
-void start();
+start().catch((error: unknown) => {
+  console.error(error);
+  const app = document.getElementById('app');
+  if (app) showError(app, 'Qualcosa è andato storto: impossibile avviare il gioco.');
+});

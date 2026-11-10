@@ -6,7 +6,10 @@ export class GameLoop {
   private lastTime = 0;
   private isRunning = false;
 
-  constructor(private readonly onFrame: (dt: number) => void) {}
+  constructor(
+    /** `dt` è limitato (animazione); `rawDt` è il delta reale (contatore fps). */
+    private readonly onFrame: (dt: number, rawDt: number) => void,
+  ) {}
 
   get running(): boolean {
     return this.isRunning;
@@ -29,9 +32,9 @@ export class GameLoop {
 
   private readonly frame = (now: number): void => {
     if (!this.isRunning) return;
-    const dt = clampFrameDt((now - this.lastTime) / 1000);
+    const rawDt = (now - this.lastTime) / 1000;
     this.lastTime = now;
-    this.onFrame(dt);
+    this.onFrame(clampFrameDt(rawDt), rawDt);
     if (this.isRunning) this.rafId = requestAnimationFrame(this.frame);
   };
 
