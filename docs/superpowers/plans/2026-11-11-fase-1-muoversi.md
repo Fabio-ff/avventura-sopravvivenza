@@ -33,7 +33,7 @@ di 1/60 s. Nessun motore di fisica: cilindro verticale contro scatole allineate 
   `canReveal` e `canSmash` restano solo nel profilo: i loro elementi arrivano con la missione (fasi 2 e 6).
 - **Palestra** (misure scelte sui profili): fossato stretto 2 m (tutti), fossato largo 5,5 m (solo Ninja), gradino 0,3 m
   (si sale camminando), gradino 0,8 m (saltando), muro 1,6 m (solo Ninja), muro 3 m (nessuno), passaggio basso con luce
-  1,2 m (accovacciati), masso 1,2 m che chiude un varco (solo chi ha `canPush`, camminandoci contro), trappola mobile
+  1,2 m (accovacciati), masso 1,5 m che chiude un varco (solo chi ha `canPush`, camminandoci contro), trappola mobile
   (scatola `pericolo` che va avanti e indietro su 4 m in 2 s).
 - **Vite.** Un colpo toglie una vita, spinge indietro e dà 1,5 s di invulnerabilità (clip `hit`, modello che lampeggia).
   Cadere in un fossato toglie una vita e riporta all'ultimo punto sicuro a terra. A zero vite: scritta "Riprova!",
