@@ -63,6 +63,13 @@ export function loadProfiles(raw: unknown = rawProfiles): AbilityProfile[] {
       colore,
     };
   });
+  const ids = new Set<string>();
+  for (const p of out) {
+    if (ids.has(p.id)) throw new Error(`Profilo ${p.id}: l'id è duplicato`);
+    ids.add(p.id);
+    if (!Number.isInteger(p.vite))
+      throw new Error(`Profilo ${p.id}: il campo "vite" deve essere un intero di almeno 1`);
+  }
   if (!out.some((p) => p.id === 'golden')) throw new Error('Manca il profilo "golden"');
   return out;
 }

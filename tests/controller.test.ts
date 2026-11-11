@@ -112,6 +112,19 @@ describe('movimento di base', () => {
     expect(run.state.crouching).toBe(true);
   });
 
+  it('accovacciato il cilindro passa sotto una luce di 1,2 m, in piedi no', () => {
+    const tunnel = [
+      slab(1, -30, 50),
+      box(2, 'fisso', { x: 3, y: 1.2, z: -50 }, { x: 9, y: 3, z: 50 }),
+    ];
+    const crouched = start(0);
+    advance(crouched, 400, () => fwd({ crouch: true }), 'golden', tunnel);
+    expect(crouched.state.position.x).toBeGreaterThan(9.35);
+    const standing = start(0);
+    advance(standing, 240, () => fwd(), 'golden', tunnel);
+    expect(standing.state.position.x).toBeCloseTo(3 - 0.35, 2);
+  });
+
   it('non cammina in orizzontale da fermo e atterra da 30 m', () => {
     const run = start(0, 30);
     advance(run, 240, () => NONE, 'golden', floor);
@@ -225,7 +238,7 @@ describe('scivolare, masso, pericoli', () => {
   it('il golem sposta il masso, golden no', () => {
     const mk = () => [
       slab(1, -30, 50),
-      box(2, 'spingibile', { x: 2, y: 0, z: -0.6 }, { x: 3.2, y: 1.2, z: 0.6 }),
+      box(2, 'spingibile', { x: 2, y: 0, z: -0.6 }, { x: 3.2, y: 1.5, z: 0.6 }),
     ];
     const s1 = mk();
     const golem = start(0);
@@ -241,7 +254,7 @@ describe('scivolare, masso, pericoli', () => {
   it('il masso si ferma contro un muro', () => {
     const solids = [
       slab(1, -30, 50),
-      box(2, 'spingibile', { x: 2, y: 0, z: -0.6 }, { x: 3.2, y: 1.2, z: 0.6 }),
+      box(2, 'spingibile', { x: 2, y: 0, z: -0.6 }, { x: 3.2, y: 1.5, z: 0.6 }),
       box(3, 'fisso', { x: 6, y: 0, z: -5 }, { x: 7, y: 3, z: 5 }),
     ];
     const run = start(0);
@@ -284,26 +297,62 @@ describe('caduta e punto sicuro', () => {
     expect(run.events.filter((e) => e.type === 'caduto')).toHaveLength(1);
   });
 
-  it('il punto sicuro non si aggiorna vicino al bordo né su un masso', () => {
-    const solids = [
-      slab(1, -30, 0),
-      box(2, 'spingibile', { x: -20, y: 0, z: -1 }, { x: -18, y: 1, z: 1 }),
-    ];
+  it('il punto sicuro non si aggiorna vicino al bordo', () => {
+    const solids = [slab(1, -30, 0)];
     const run = start(-10);
     advance(run, 5, () => NONE, 'golden', solids);
-    teleport(run.state, { x: -19, y: 1, z: 0 });
-    advance(run, 5, () => NONE, 'golden', solids);
-    expect(run.state.safePoint.x).toBeCloseTo(-10, 6);
     teleport(run.state, { x: -0.2, y: 0, z: 0 });
+    run.state.safePoint = { x: -10, y: 0, z: 0 };
     advance(run, 5, () => NONE, 'golden', solids);
     expect(run.state.safePoint.x).toBeCloseTo(-10, 6);
+  });
+
+  it('il punto sicuro non si aggiorna su un masso, su un pericolo né durante il colpo', () => {
+    const marker = { x: -10, y: 0, z: 0 };
+    // su un masso (con una lastra fissa alla stessa quota che si sovrappone)
+    const rockWorld = [
+      slab(1, -30, 30),
+      box(2, 'spingibile', { x: -3, y: 0, z: -1 }, { x: -1, y: 1, z: 1 }),
+      box(3, 'fisso', { x: -30, y: 0.9, z: -50 }, { x: 0, y: 1, z: 50 }),
+    ];
+    const a = start(-2, 1);
+    a.state.safePoint = { ...marker };
+    advance(a, 10, () => NONE, 'golden', rockWorld);
+    expect(a.state.grounded).toBe(true);
+    expect(a.state.safePoint).toEqual(marker);
+    // dentro un pericolo
+    const trapWorld = [
+      slab(1, -30, 30),
+      box(9, 'pericolo', { x: -6, y: 0, z: -2 }, { x: -4, y: 1, z: 2 }),
+    ];
+    const b = start(-5);
+    b.state.safePoint = { ...marker };
+    advance(b, 10, () => NONE, 'golden', trapWorld);
+    expect(b.state.safePoint).toEqual(marker);
+    // durante il colpo: finché il modo è colpito non cambia, dopo sì
+    const floor = [slab(1, -30, 30)];
+    const c = start(0);
+    advance(c, 5, () => NONE, 'golden', floor);
+    c.state.safePoint = { ...marker };
+    applyKnockback(c.state, { x: 1, y: 0, z: 0 });
+    let hitFrames = 0;
+    for (let i = 0; i < 60; i++) {
+      advance(c, 1, () => NONE, 'golden', floor);
+      if (c.state.mode === 'colpito') {
+        hitFrames++;
+        expect(c.state.safePoint).toEqual(marker);
+      }
+    }
+    expect(hitFrames).toBeGreaterThan(5);
+    expect(c.state.safePoint.x).toBeCloseTo(c.state.position.x, 6);
   });
 });
 
 describe('coyote time e salto memorizzato', () => {
   const ledge = [slab(1, -30, 0)];
 
-  function jumpedAfterLeaving(waitFrames: number): boolean {
+  /** Preme salto dopo `airFrames` frame passati in aria (a 1/60). */
+  function jumpedAfterLeaving(airFrames: number): boolean {
     const run = start(-1);
     let left = -1;
     let jumped = false;
@@ -315,7 +364,7 @@ describe('coyote time e salto memorizzato', () => {
         wasGrounded ||= s.grounded;
         if (wasGrounded && left < 0 && !s.grounded) left = f;
         if (s.mode === 'salta') jumped = true;
-        return fwd({ jump: left >= 0 && f === left + waitFrames });
+        return fwd({ jump: left >= 0 && f === left + airFrames - 1 });
       },
       'golden',
       ledge,
@@ -324,8 +373,8 @@ describe('coyote time e salto memorizzato', () => {
   }
 
   it('coyote time: salta fino a 0,1 s dopo aver lasciato il suolo, non oltre', () => {
-    expect(jumpedAfterLeaving(3)).toBe(true);
-    expect(jumpedAfterLeaving(9)).toBe(false);
+    expect(jumpedAfterLeaving(5)).toBe(true);
+    expect(jumpedAfterLeaving(7)).toBe(false);
   });
 
   it('salto memorizzato: premuto poco prima di atterrare vale, troppo presto no', () => {

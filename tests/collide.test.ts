@@ -65,7 +65,7 @@ describe('moveBody', () => {
   });
 
   it('il masso si sposta solo con canPush', () => {
-    const rock = box(3, 'spingibile', { x: 1, y: 0, z: -0.6 }, { x: 2.2, y: 1.2, z: 0.6 });
+    const rock = box(3, 'spingibile', { x: 1, y: 0, z: -0.6 }, { x: 2.2, y: 1.5, z: 0.6 });
     const solids = [floor, rock];
     let r = moveBody(body(0.5, 0, 0), { x: 0.2, y: -0.01, z: 0 }, solids, opts);
     expect(rock.min.x).toBe(1);
@@ -77,7 +77,7 @@ describe('moveBody', () => {
   });
 
   it('il masso si ferma contro un muro e blocca il giocatore', () => {
-    const rock = box(3, 'spingibile', { x: 1, y: 0, z: -0.6 }, { x: 2.2, y: 1.2, z: 0.6 });
+    const rock = box(3, 'spingibile', { x: 1, y: 0, z: -0.6 }, { x: 2.2, y: 1.5, z: 0.6 });
     const wall = box(4, 'fisso', { x: 2.5, y: 0, z: -5 }, { x: 3, y: 3, z: 5 });
     const solids = [floor, rock, wall];
     let p = { x: 0.5, y: 0, z: 0 };
