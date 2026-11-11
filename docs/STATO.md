@@ -1,6 +1,6 @@
 # Stato del progetto
 
-**Fase corrente:** 0 — Bootstrap, completata salvo la prova sul tablet
+**Fase corrente:** 0 — Bootstrap completata; prossima: 1 — Muoversi
 (piano: `docs/superpowers/plans/2026-11-10-fase-0-bootstrap.md`, epic: issue #1).
 
 **Indirizzo pubblico:** https://fabio-ff.github.io/avventura-sopravvivenza/
@@ -14,11 +14,11 @@
   model-cache, smoke in CI anche con `BASE_PATH`, favicon a tema avventura.
 
 ## Prossimo passo
-- Prova sul tablet con Filippo: annotare qui sotto modello del tablet e fps letti.
-- Poi piano della fase 1 (Muoversi) in `docs/superpowers/plans/`.
+- Fase 0 chiusa (issue #1).
+- Piano della fase 1 (Muoversi) in `docs/superpowers/plans/`.
 
 ## Prova sul tablet
-- Fase 0: da fare.
+- Fase 0 (2026-11-11): 60 fps con Golden in idle (limite dello schermo; modello del tablet non annotato).
 
 ## Da ricordare per le fasi successive
 - `golden.glb` contiene ancora le clip `dribble` e `shoot`: toglierle con la pipeline asset (fase 4).
