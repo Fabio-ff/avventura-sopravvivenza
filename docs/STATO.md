@@ -1,7 +1,7 @@
 # Stato del progetto
 
-**Fase corrente:** 0 — Bootstrap completata; prossima: 1 — Muoversi
-(piano: `docs/superpowers/plans/2026-11-10-fase-0-bootstrap.md`, epic: issue #1).
+**Fase corrente:** 1 — Muoversi, in corso
+(piano: `docs/superpowers/plans/2026-11-11-fase-1-muoversi.md`, epic: issue #6).
 
 **Indirizzo pubblico:** https://fabio-ff.github.io/avventura-sopravvivenza/
 
@@ -13,9 +13,12 @@
   fps dal delta reale, ripiego sul segnaposto in caso di errore, messaggio a contesto WebGL perso, test del
   model-cache, smoke in CI anche con `BASE_PATH`, favicon a tema avventura.
 
+- Fase 1, Task 1 e 2 mergiati (PR #8 e #7): collisioni cilindro contro scatole, controller, profili dei cinque
+  personaggi; comandi tastiera, gamepad e touch. PR #8 rivista da Opus e corretta (masso alzato a 1,5 m).
+
 ## Prossimo passo
-- Fase 0 chiusa (issue #1).
-- Piano della fase 1 (Muoversi) in `docs/superpowers/plans/`.
+- Fase 1, Task 3 (palestra giocabile e camera, `fase1/palestra`), poi Task 4 (vite, trappola mobile, HUD).
+- I merge li lancia Fabio o li chiede in modo esplicito: il classificatore blocca `gh pr merge` in autonomia.
 
 ## Prova sul tablet
 - Fase 0 (2026-11-11): 60 fps con Golden in idle (limite dello schermo; modello del tablet non annotato).
