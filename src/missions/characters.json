@@ -1,0 +1,67 @@
+[
+  {
+    "id": "golden",
+    "nome": "Golden",
+    "corsa": 6,
+    "camminata": 2.5,
+    "accovacciato": 2,
+    "salto": 1.2,
+    "vite": 3,
+    "canPush": false,
+    "canReveal": false,
+    "canSmash": false,
+    "colore": null
+  },
+  {
+    "id": "ninja",
+    "nome": "Ninja",
+    "corsa": 7,
+    "camminata": 2.5,
+    "accovacciato": 2,
+    "salto": 2.0,
+    "vite": 3,
+    "canPush": false,
+    "canReveal": false,
+    "canSmash": false,
+    "colore": "#d32f2f"
+  },
+  {
+    "id": "golem",
+    "nome": "Golem",
+    "corsa": 5,
+    "camminata": 2.5,
+    "accovacciato": 2,
+    "salto": 1.0,
+    "vite": 4,
+    "canPush": true,
+    "canReveal": false,
+    "canSmash": false,
+    "colore": "#8d8d86"
+  },
+  {
+    "id": "mago",
+    "nome": "Mago",
+    "corsa": 6,
+    "camminata": 2.5,
+    "accovacciato": 2,
+    "salto": 1.2,
+    "vite": 3,
+    "canPush": false,
+    "canReveal": true,
+    "canSmash": false,
+    "colore": "#1e5bd8"
+  },
+  {
+    "id": "vichinga",
+    "nome": "Vichinga",
+    "corsa": 6,
+    "camminata": 2.5,
+    "accovacciato": 2,
+    "salto": 1.2,
+    "vite": 3,
+    "canPush": false,
+    "canReveal": false,
+    "canSmash": true,
+    "colore": "#f57c00"
+  }
+]
