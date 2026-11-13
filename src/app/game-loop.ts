@@ -1,5 +1,26 @@
 import { clampFrameDt } from './frame-time';
 
+/** Passo fisso della simulazione, in secondi. */
+export const FIXED_STEP = 1 / 60;
+/** Tetto ai passi per frame: oltre, il tempo in eccesso si perde invece di rincorrerlo. */
+export const MAX_STEPS_PER_FRAME = 5;
+
+/**
+ * Accumulatore a passo fisso: aggiunge `dt` e dice quanti passi eseguire, con il resto da portare
+ * al frame dopo. Se si supera `maxSteps` il resto viene scartato.
+ */
+export function consumeSteps(
+  accumulator: number,
+  dt: number,
+  step = FIXED_STEP,
+  maxSteps = MAX_STEPS_PER_FRAME,
+): { steps: number; accumulator: number } {
+  const total = accumulator + (Number.isFinite(dt) && dt > 0 ? dt : 0);
+  const steps = Math.floor(total / step + 1e-9);
+  if (steps > maxSteps) return { steps: maxSteps, accumulator: 0 };
+  return { steps, accumulator: Math.max(0, total - steps * step) };
+}
+
 /** Ciclo requestAnimationFrame con delta di frame limitato (scheda in background e ritorno). */
 export class GameLoop {
   private rafId = 0;
