@@ -1,0 +1,75 @@
+.touch-controls {
+  --joy: clamp(96px, 20vmin, 160px);
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  display: none;
+}
+
+/* Visibile solo sui dispositivi touch. */
+@media (hover: none) and (pointer: coarse) {
+  .touch-controls {
+    display: block;
+  }
+}
+
+.touch-joystick {
+  position: absolute;
+  width: var(--joy);
+  height: var(--joy);
+  margin: calc(var(--joy) / -2) 0 0 calc(var(--joy) / -2);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
+.touch-joystick[hidden] {
+  display: none;
+}
+
+.touch-joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 40%;
+  height: 40%;
+  margin: -20% 0 0 -20%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.touch-buttons {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.touch-button {
+  --size: clamp(72px, 14vmin, 104px);
+  min-width: 64px;
+  min-height: 64px;
+  width: var(--size);
+  height: var(--size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font:
+    600 16px system-ui,
+    sans-serif;
+  touch-action: none;
+}
+
+.touch-button.is-pressed {
+  background: rgba(255, 255, 255, 0.45);
+}
