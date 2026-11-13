@@ -113,7 +113,7 @@ export class PlayerView {
   readonly group = new THREE.Group();
   private readonly body = new THREE.Group();
   private readonly shadow = createBlobShadow();
-  private heading = 0;
+  private heading: number | null = null;
   private squash = 1;
 
   private constructor(
@@ -151,7 +151,10 @@ export class PlayerView {
     const p = state.position;
     this.group.position.set(p.x, p.y, p.z);
 
-    this.heading = approachAngle(this.heading, state.facing, TURN_RATE, dt);
+    this.heading =
+      this.heading === null
+        ? state.facing
+        : approachAngle(this.heading, state.facing, TURN_RATE, dt);
     this.body.rotation.y = this.heading;
     this.squash += (params.squash - this.squash) * (1 - Math.exp(-SQUASH_RATE * dt));
     this.body.scale.y = this.squash;

@@ -76,7 +76,7 @@ describe('level.json della palestra', () => {
     expect(h('gradino 0,3 m')).toBeCloseTo(0.3);
     expect(h('gradino 0,8 m')).toBeCloseTo(0.8);
     expect(h('muro 1,6 m')).toBeCloseTo(1.6);
-    expect(h('muro 3 m')).toBeCloseTo(3);
+    expect(h('muro alto')).toBeCloseTo(4);
     expect(h('masso')).toBeCloseTo(1.5);
     expect(byName('masso').kind).toBe('spingibile');
     // fossati: vuoto tra due lastre
@@ -84,8 +84,8 @@ describe('level.json della palestra', () => {
     expect(byName('lastra 2').min.z - byName('lastra 3').max.z).toBeCloseTo(5.5);
     // passaggio basso: luce 1,2 m sotto l'architrave
     expect(byName('architrave').min.y).toBeCloseTo(1.2);
-    // recinzione alta 3 m
-    expect(byName('recinto ovest').max.y).toBeCloseTo(3);
+    // recinzione alta 6 m
+    expect(byName('recinto ovest').max.y).toBeCloseTo(6);
     // varco del masso largo quanto il masso
     expect(byName('muro masso destro').min.x - byName('muro masso sinistro').max.x).toBeCloseTo(
       byName('masso').max.x - byName('masso').min.x,

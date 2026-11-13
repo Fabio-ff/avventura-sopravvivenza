@@ -44,12 +44,12 @@
       "posizione": {
         "x": 0,
         "y": -0.5,
-        "z": -57.75
+        "z": -58.25
       },
       "dimensioni": {
         "x": 20,
         "y": 1,
-        "z": 64.5
+        "z": 65.5
       },
       "colore": "#8fd694"
     },
@@ -122,12 +122,12 @@
       "nome": "muro 1,6 m",
       "tipo": "fisso",
       "posizione": {
-        "x": -3.5,
+        "x": -2,
         "y": 0.8,
         "z": -41.5
       },
       "dimensioni": {
-        "x": 13,
+        "x": 10,
         "y": 1.6,
         "z": 1
       },
@@ -135,16 +135,16 @@
     },
     {
       "id": 9,
-      "nome": "muro 3 m",
+      "nome": "muro alto",
       "tipo": "fisso",
       "posizione": {
         "x": 3.5,
-        "y": 1.5,
+        "y": 2,
         "z": -46.5
       },
       "dimensioni": {
         "x": 13,
-        "y": 3,
+        "y": 4,
         "z": 1
       },
       "colore": "#e8436b"
@@ -203,12 +203,12 @@
       "tipo": "fisso",
       "posizione": {
         "x": -5.5,
-        "y": 1.5,
+        "y": 1.8,
         "z": -58.5
       },
       "dimensioni": {
         "x": 9,
-        "y": 3,
+        "y": 3.6,
         "z": 1
       },
       "colore": "#a0522d"
@@ -219,12 +219,12 @@
       "tipo": "fisso",
       "posizione": {
         "x": 5.5,
-        "y": 1.5,
+        "y": 1.8,
         "z": -58.5
       },
       "dimensioni": {
         "x": 9,
-        "y": 3,
+        "y": 3.6,
         "z": 1
       },
       "colore": "#a0522d"
@@ -267,12 +267,12 @@
       "tipo": "fisso",
       "posizione": {
         "x": -10.5,
-        "y": 1,
+        "y": 2.5,
         "z": -41
       },
       "dimensioni": {
         "x": 1,
-        "y": 4,
+        "y": 7,
         "z": 100
       },
       "colore": "#5b6b8c"
@@ -283,12 +283,12 @@
       "tipo": "fisso",
       "posizione": {
         "x": 0,
-        "y": 1,
+        "y": 2.5,
         "z": 9.5
       },
       "dimensioni": {
         "x": 22,
-        "y": 4,
+        "y": 7,
         "z": 1
       },
       "colore": "#5b6b8c"
@@ -299,12 +299,12 @@
       "tipo": "fisso",
       "posizione": {
         "x": 0,
-        "y": 1,
+        "y": 2.5,
         "z": -91.5
       },
       "dimensioni": {
         "x": 22,
-        "y": 4,
+        "y": 7,
         "z": 1
       },
       "colore": "#5b6b8c"
@@ -315,12 +315,12 @@
       "tipo": "fisso",
       "posizione": {
         "x": 10.5,
-        "y": 1,
+        "y": 2.5,
         "z": -14
       },
       "dimensioni": {
         "x": 1,
-        "y": 4,
+        "y": 7,
         "z": 46
       },
       "colore": "#5b6b8c"
@@ -331,12 +331,12 @@
       "tipo": "fisso",
       "posizione": {
         "x": 10.5,
-        "y": 1,
+        "y": 2.5,
         "z": -53
       },
       "dimensioni": {
         "x": 1,
-        "y": 4,
+        "y": 7,
         "z": 26
       },
       "colore": "#5b6b8c"
@@ -347,60 +347,60 @@
       "tipo": "fisso",
       "posizione": {
         "x": 10.5,
-        "y": 1,
+        "y": 2.5,
         "z": -80
       },
       "dimensioni": {
         "x": 1,
-        "y": 4,
+        "y": 7,
         "z": 22
       },
       "colore": "#5b6b8c"
     },
     {
       "id": 23,
-      "nome": "corridoio esterno",
+      "nome": "recinto corridoio esterno",
       "tipo": "fisso",
       "posizione": {
         "x": 14.5,
-        "y": 1,
+        "y": 2.5,
         "z": -55
       },
       "dimensioni": {
         "x": 1,
-        "y": 4,
+        "y": 7,
         "z": 36
       },
       "colore": "#5b6b8c"
     },
     {
       "id": 24,
-      "nome": "corridoio chiusura",
+      "nome": "recinto corridoio chiusura",
       "tipo": "fisso",
       "posizione": {
         "x": 12.5,
-        "y": 1,
+        "y": 2.5,
         "z": -73.5
       },
       "dimensioni": {
         "x": 5,
-        "y": 4,
+        "y": 7,
         "z": 1
       },
       "colore": "#5b6b8c"
     },
     {
       "id": 25,
-      "nome": "corridoio imbocco",
+      "nome": "recinto corridoio imbocco",
       "tipo": "fisso",
       "posizione": {
         "x": 13,
-        "y": 1,
+        "y": 2.5,
         "z": -36.5
       },
       "dimensioni": {
         "x": 4,
-        "y": 4,
+        "y": 7,
         "z": 1
       },
       "colore": "#5b6b8c"
