@@ -63,6 +63,16 @@ async function run() {
     { timeout: 15_000 },
   );
 
+  // Tenendo premuto "avanti" per un secondo la posizione esposta cambia.
+  const before = await page.evaluate(() => document.body.dataset.pos);
+  if (!before) throw new Error('body[data-pos] mancante');
+  await page.keyboard.down('KeyW');
+  await page.waitForTimeout(1000);
+  await page.keyboard.up('KeyW');
+  await page.waitForTimeout(400);
+  const after = await page.evaluate(() => document.body.dataset.pos);
+  if (after === before) throw new Error(`il giocatore non si è mosso (data-pos=${after})`);
+
   // Il segnaposto scrive un avviso voluto: non è un errore.
   if (errors.length) throw new Error(`errori in console:\n${errors.join('\n')}`);
   console.log(`smoke: ok (${ready})`);

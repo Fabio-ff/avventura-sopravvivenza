@@ -1,0 +1,409 @@
+{
+  "partenza": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+  },
+  "scatole": [
+    {
+      "id": 1,
+      "nome": "lastra partenza",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 0,
+        "y": -0.5,
+        "z": 0.5
+      },
+      "dimensioni": {
+        "x": 20,
+        "y": 1,
+        "z": 17
+      },
+      "colore": "#8fd694"
+    },
+    {
+      "id": 2,
+      "nome": "lastra 2",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 0,
+        "y": -0.5,
+        "z": -15
+      },
+      "dimensioni": {
+        "x": 20,
+        "y": 1,
+        "z": 10
+      },
+      "colore": "#7fc7e8"
+    },
+    {
+      "id": 3,
+      "nome": "lastra 3",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 0,
+        "y": -0.5,
+        "z": -58.25
+      },
+      "dimensioni": {
+        "x": 20,
+        "y": 1,
+        "z": 65.5
+      },
+      "colore": "#8fd694"
+    },
+    {
+      "id": 4,
+      "nome": "passerella",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 8.75,
+        "y": -0.5,
+        "z": -22.75
+      },
+      "dimensioni": {
+        "x": 2.5,
+        "y": 1,
+        "z": 5.5
+      },
+      "colore": "#f5d76e"
+    },
+    {
+      "id": 5,
+      "nome": "corridoio",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 12,
+        "y": -0.5,
+        "z": -55
+      },
+      "dimensioni": {
+        "x": 4,
+        "y": 1,
+        "z": 36
+      },
+      "colore": "#c9a0e8"
+    },
+    {
+      "id": 6,
+      "nome": "gradino 0,3 m",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 0,
+        "y": 0.15,
+        "z": -28.5
+      },
+      "dimensioni": {
+        "x": 20,
+        "y": 0.3,
+        "z": 1
+      },
+      "colore": "#ffe14d"
+    },
+    {
+      "id": 7,
+      "nome": "gradino 0,8 m",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 0,
+        "y": 0.4,
+        "z": -32.5
+      },
+      "dimensioni": {
+        "x": 20,
+        "y": 0.8,
+        "z": 1
+      },
+      "colore": "#ff9f1c"
+    },
+    {
+      "id": 8,
+      "nome": "muro 1,6 m",
+      "tipo": "fisso",
+      "posizione": {
+        "x": -2,
+        "y": 0.8,
+        "z": -41.5
+      },
+      "dimensioni": {
+        "x": 10,
+        "y": 1.6,
+        "z": 1
+      },
+      "colore": "#b565e8"
+    },
+    {
+      "id": 9,
+      "nome": "muro alto",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 3.5,
+        "y": 2,
+        "z": -46.5
+      },
+      "dimensioni": {
+        "x": 13,
+        "y": 4,
+        "z": 1
+      },
+      "colore": "#e8436b"
+    },
+    {
+      "id": 10,
+      "nome": "architrave",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 0,
+        "y": 2.1,
+        "z": -52.25
+      },
+      "dimensioni": {
+        "x": 6,
+        "y": 1.8,
+        "z": 2.5
+      },
+      "colore": "#2ec4d6"
+    },
+    {
+      "id": 11,
+      "nome": "pilastro sinistro",
+      "tipo": "fisso",
+      "posizione": {
+        "x": -3.5,
+        "y": 1.5,
+        "z": -52.25
+      },
+      "dimensioni": {
+        "x": 1,
+        "y": 3,
+        "z": 2.5
+      },
+      "colore": "#2ec4d6"
+    },
+    {
+      "id": 12,
+      "nome": "pilastro destro",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 3.5,
+        "y": 1.5,
+        "z": -52.25
+      },
+      "dimensioni": {
+        "x": 1,
+        "y": 3,
+        "z": 2.5
+      },
+      "colore": "#2ec4d6"
+    },
+    {
+      "id": 13,
+      "nome": "muro masso sinistro",
+      "tipo": "fisso",
+      "posizione": {
+        "x": -5.5,
+        "y": 1.8,
+        "z": -58.5
+      },
+      "dimensioni": {
+        "x": 9,
+        "y": 3.6,
+        "z": 1
+      },
+      "colore": "#a0522d"
+    },
+    {
+      "id": 14,
+      "nome": "muro masso destro",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 5.5,
+        "y": 1.8,
+        "z": -58.5
+      },
+      "dimensioni": {
+        "x": 9,
+        "y": 3.6,
+        "z": 1
+      },
+      "colore": "#a0522d"
+    },
+    {
+      "id": 15,
+      "nome": "masso",
+      "tipo": "spingibile",
+      "posizione": {
+        "x": 0,
+        "y": 0.75,
+        "z": -58.5
+      },
+      "dimensioni": {
+        "x": 2,
+        "y": 1.5,
+        "z": 1
+      },
+      "colore": "#ff7a00"
+    },
+    {
+      "id": 16,
+      "nome": "trappola",
+      "tipo": "pericolo",
+      "posizione": {
+        "x": 0,
+        "y": 0.5,
+        "z": -75.5
+      },
+      "dimensioni": {
+        "x": 4,
+        "y": 1,
+        "z": 1
+      },
+      "colore": "#e5202e"
+    },
+    {
+      "id": 17,
+      "nome": "recinto ovest",
+      "tipo": "fisso",
+      "posizione": {
+        "x": -10.5,
+        "y": 2.5,
+        "z": -41
+      },
+      "dimensioni": {
+        "x": 1,
+        "y": 7,
+        "z": 100
+      },
+      "colore": "#5b6b8c"
+    },
+    {
+      "id": 18,
+      "nome": "recinto retro",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 0,
+        "y": 2.5,
+        "z": 9.5
+      },
+      "dimensioni": {
+        "x": 22,
+        "y": 7,
+        "z": 1
+      },
+      "colore": "#5b6b8c"
+    },
+    {
+      "id": 19,
+      "nome": "recinto fondo",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 0,
+        "y": 2.5,
+        "z": -91.5
+      },
+      "dimensioni": {
+        "x": 22,
+        "y": 7,
+        "z": 1
+      },
+      "colore": "#5b6b8c"
+    },
+    {
+      "id": 20,
+      "nome": "recinto est 1",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 10.5,
+        "y": 2.5,
+        "z": -14
+      },
+      "dimensioni": {
+        "x": 1,
+        "y": 7,
+        "z": 46
+      },
+      "colore": "#5b6b8c"
+    },
+    {
+      "id": 21,
+      "nome": "recinto est 2",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 10.5,
+        "y": 2.5,
+        "z": -53
+      },
+      "dimensioni": {
+        "x": 1,
+        "y": 7,
+        "z": 26
+      },
+      "colore": "#5b6b8c"
+    },
+    {
+      "id": 22,
+      "nome": "recinto est 3",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 10.5,
+        "y": 2.5,
+        "z": -80
+      },
+      "dimensioni": {
+        "x": 1,
+        "y": 7,
+        "z": 22
+      },
+      "colore": "#5b6b8c"
+    },
+    {
+      "id": 23,
+      "nome": "recinto corridoio esterno",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 14.5,
+        "y": 2.5,
+        "z": -55
+      },
+      "dimensioni": {
+        "x": 1,
+        "y": 7,
+        "z": 36
+      },
+      "colore": "#5b6b8c"
+    },
+    {
+      "id": 24,
+      "nome": "recinto corridoio chiusura",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 12.5,
+        "y": 2.5,
+        "z": -73.5
+      },
+      "dimensioni": {
+        "x": 5,
+        "y": 7,
+        "z": 1
+      },
+      "colore": "#5b6b8c"
+    },
+    {
+      "id": 25,
+      "nome": "recinto corridoio imbocco",
+      "tipo": "fisso",
+      "posizione": {
+        "x": 13,
+        "y": 2.5,
+        "z": -36.5
+      },
+      "dimensioni": {
+        "x": 4,
+        "y": 7,
+        "z": 1
+      },
+      "colore": "#5b6b8c"
+    }
+  ]
+}
