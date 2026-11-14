@@ -73,6 +73,18 @@ async function run() {
   const after = await page.evaluate(() => document.body.dataset.pos);
   if (after === before) throw new Error(`il giocatore non si è mosso (data-pos=${after})`);
 
+  // Con ?pg=titano si carica il modello del Titano (non il segnaposto).
+  const titano = await browser.newPage({ viewport: { width: 640, height: 360 } });
+  titano.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+  titano.on('pageerror', (e) => errors.push(String(e)));
+  await titano.goto(`${BASE}?pg=titano`);
+  await titano.waitForSelector('body[data-ready]', { timeout: 30_000 });
+  const readyTitano = await titano.evaluate(() => document.body.dataset.ready);
+  if (readyTitano !== 'titano')
+    throw new Error(`?pg=titano: data-ready=${readyTitano}, atteso titano`);
+
   // Il segnaposto scrive un avviso voluto: non è un errore.
   if (errors.length) throw new Error(`errori in console:\n${errors.join('\n')}`);
   console.log(`smoke: ok (${ready})`);

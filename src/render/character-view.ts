@@ -10,9 +10,11 @@ import {
 import {
   CANONICAL_CLIPS,
   clipFor,
+  clipSpecFor,
   LOOPING_CLIPS,
   resolveClip,
   type CanonicalClip,
+  type ClipMap,
   type CharacterState,
 } from './clip-for';
 import type { LoadedModel } from './model-cache';
@@ -30,18 +32,22 @@ export class CharacterView {
   private readonly actions = new Map<CanonicalClip, AnimationAction>();
   private readonly root: Object3D;
   private readonly skinned: SkinnedMesh[] = [];
+  private readonly speeds = new Map<CanonicalClip, number>();
   private active: CanonicalClip | null = null;
 
-  constructor(model: LoadedModel) {
+  constructor(model: LoadedModel, clipMap?: ClipMap) {
     this.root = model.scene;
     this.group.add(this.root);
     this.root.traverse((o) => {
       if (o instanceof SkinnedMesh) this.skinned.push(o);
     });
     this.mixer = new AnimationMixer(this.root);
-    for (const clip of model.clips) {
-      const name = CANONICAL_CLIPS.find((c) => c === clip.name);
-      if (name) this.actions.set(name, this.mixer.clipAction(clip));
+    for (const logical of CANONICAL_CLIPS) {
+      const spec = clipSpecFor(clipMap, logical);
+      const clip = model.clips.find((c) => c.name === spec.nome);
+      if (!clip) continue;
+      this.actions.set(logical, this.mixer.clipAction(clip));
+      this.speeds.set(logical, spec.velocita);
     }
   }
 
@@ -69,6 +75,7 @@ export class CharacterView {
     to.reset();
     to.enabled = true;
     to.setEffectiveWeight(1);
+    to.setEffectiveTimeScale(this.speeds.get(clip) ?? 1);
     if (LOOPING_CLIPS.has(clip)) {
       to.setLoop(LoopRepeat, Infinity);
     } else {

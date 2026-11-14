@@ -28,8 +28,12 @@ di 1/60 s. Nessun motore di fisica: cilindro verticale contro scatole allineate 
   | golem | 5 | 1,0 | 4 | `canPush` | grigio pietra |
   | mago | 6 | 1,2 | 3 | `canReveal` | blu |
   | vichinga | 6 | 1,2 | 3 | `canSmash` | arancio |
+  | titano | 5,5 | 1,4 | 4 | `canShock` | originale |
 
   Camminata 2,5 m/s e accovacciato 2 m/s per tutti. I quattro segnaposto usano il modello di Golden tinto.
+  Il Titano elettrico (`?pg=titano`) ha il modello Tripo vero (`characters/titano.glb`, senza gambe, fluttua a 0,25 m con
+  oscillazione di ±0,06 m): mancano le clip idle e run, quindi idle è `walk.001` ferma su una posa e run è `walk.001`
+  accelerata (x2); jump e fall usano `jump.001`, hit usa la caduta all'indietro accelerata (x3).
   `canReveal` e `canSmash` restano solo nel profilo: i loro elementi arrivano con la missione (fasi 2 e 6).
 - **Palestra** (misure scelte sui profili): fossato stretto 2 m (tutti), fossato largo 5,5 m (solo Ninja), gradino 0,3 m
   (si sale camminando), gradino 0,8 m (saltando), muro 1,6 m (solo Ninja), muro 3 m (nessuno), passaggio basso con luce
@@ -45,7 +49,7 @@ di 1/60 s. Nessun motore di fisica: cilindro verticale contro scatole allineate 
 - **Camera.** Segue da dietro a 4,5 m con inclinazione 25°, si riallinea da sola dopo 1,5 s senza comandi di camera mentre ci
   si muove, si accorcia se una scatola sta tra lei e il personaggio (cinque raggi), ostacoli che coprono diventano
   trasparenti, inclinazione limitata tra −10° e 60°.
-- **URL.** `?pg=golden|ninja|golem|mago|vichinga` (predefinito golden), `?level=palestra` (unico livello, predefinito).
+- **URL.** `?pg=golden|ninja|golem|mago|vichinga|titano` (predefinito golden), `?level=palestra` (unico livello, predefinito).
 
 ## Vincoli globali
 

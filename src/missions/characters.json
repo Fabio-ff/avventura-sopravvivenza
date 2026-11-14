@@ -63,5 +63,43 @@
     "canReveal": false,
     "canSmash": true,
     "colore": "#f57c00"
+  },
+  {
+    "id": "titano",
+    "nome": "Titano elettrico",
+    "corsa": 5.5,
+    "camminata": 2.5,
+    "accovacciato": 2,
+    "salto": 1.4,
+    "vite": 4,
+    "canPush": false,
+    "canReveal": false,
+    "canSmash": false,
+    "canShock": true,
+    "colore": null,
+    "modello": "characters/titano.glb",
+    "fluttua": 0.25,
+    "clip": {
+      "idle": {
+        "nome": "walk.001",
+        "velocita": 0
+      },
+      "run": {
+        "nome": "walk.001",
+        "velocita": 2
+      },
+      "jump": {
+        "nome": "jump.001",
+        "velocita": 1
+      },
+      "hit": {
+        "nome": "cadi all'indietro colpito accusando un colpo.001",
+        "velocita": 3
+      },
+      "fall": {
+        "nome": "jump.001",
+        "velocita": 1
+      }
+    }
   }
 ]
