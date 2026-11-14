@@ -49,7 +49,11 @@ di 1/60 s. Nessun motore di fisica: cilindro verticale contro scatole allineate 
 - **Camera.** Segue da dietro a 4,5 m con inclinazione 25°, si riallinea da sola dopo 1,5 s senza comandi di camera mentre ci
   si muove, si accorcia se una scatola sta tra lei e il personaggio (cinque raggi), ostacoli che coprono diventano
   trasparenti, inclinazione limitata tra −10° e 60°.
+<<<<<<< HEAD
 - **URL.** `?pg=golden|ninja|golem|mago|vichinga|titano` (predefinito golden), `?level=palestra` (unico livello, predefinito).
+=======
+- **URL.** `?pg=golden|ninja|golem|mago|vichinga` (predefinito golden), `?level=palestra` (unico livello, predefinito).
+>>>>>>> origin/main
 
 ## Vincoli globali
 
