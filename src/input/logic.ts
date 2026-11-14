@@ -9,6 +9,28 @@ export const LOOK_RAD_PER_PIXEL = 0.005;
 /** Velocità angolare massima della leva destra, rad/s. */
 export const PAD_LOOK_SPEED = 2.8;
 
+/** Velocità di rotazione dei tasti Q/E (imbardata) e R/F (inclinazione), rad/s. */
+export const KEY_YAW_SPEED = 2.2;
+export const KEY_PITCH_SPEED = 1.2;
+
+/**
+ * Look dei tasti di camera in `dt` secondi, stessa convenzione del trascinamento: `x` positivo gira
+ * a destra, `y` positivo porta la camera più in alto.
+ */
+export function keyLook(
+  left: boolean,
+  right: boolean,
+  up: boolean,
+  down: boolean,
+  dt: number,
+): { x: number; y: number } {
+  const t = Math.max(0, dt);
+  return {
+    x: ((right ? 1 : 0) - (left ? 1 : 0)) * KEY_YAW_SPEED * t,
+    y: ((up ? 1 : 0) - (down ? 1 : 0)) * KEY_PITCH_SPEED * t,
+  };
+}
+
 export function neutralFrame(): InputFrame {
   return { moveX: 0, moveY: 0, walk: false, jump: false, crouch: false, lookX: 0, lookY: 0 };
 }

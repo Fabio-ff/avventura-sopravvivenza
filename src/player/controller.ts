@@ -19,7 +19,7 @@ const KNOCK_TIME = 0.35;
 const KNOCK_SPEED = 5;
 const KNOCK_HOP = 4;
 /** Distanza minima dal bordo di una lastra perché valga come punto sicuro. */
-const SAFE_MARGIN = 0.5;
+const SAFE_MARGIN = 0.8;
 
 export type GroundHook = (x: number, z: number) => number | null;
 

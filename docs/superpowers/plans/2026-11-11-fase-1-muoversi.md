@@ -38,11 +38,13 @@ di 1/60 s. Nessun motore di fisica: cilindro verticale contro scatole allineate 
 - **Vite.** Un colpo toglie una vita, spinge indietro e dà 1,5 s di invulnerabilità (clip `hit`, modello che lampeggia).
   Cadere in un fossato toglie una vita e riporta all'ultimo punto sicuro a terra. A zero vite: scritta "Riprova!",
   ritorno alla partenza con vite piene e masso al suo posto.
-- **Comandi.** Tastiera: WASD/frecce, Spazio salta, C accovacciati, Maiusc cammina, mouse trascinato ruota la camera.
+- **Comandi.** Tastiera: WASD/frecce, Spazio salta, C accovacciati, Maiusc cammina, mouse trascinato ruota la camera,
+  Q/E ruotano la visuale, R/F la alzano e abbassano.
   Gamepad: leva sinistra, leva destra camera, A salta, B accovacciati. Touch: joystick flottante a sinistra, trascinare
   sulla metà destra ruota la camera, pulsanti Salta e Giù in basso a destra. "Interagisci" arriva in fase 2.
-- **Camera.** Segue da dietro a 6 m, si riallinea da sola dopo 1,5 s senza comandi di camera mentre ci si muove, si
-  accorcia se una scatola `fisso` sta tra lei e il personaggio, inclinazione limitata tra −10° e 60°.
+- **Camera.** Segue da dietro a 4,5 m con inclinazione 25°, si riallinea da sola dopo 1,5 s senza comandi di camera mentre ci
+  si muove, si accorcia se una scatola sta tra lei e il personaggio (cinque raggi), ostacoli che coprono diventano
+  trasparenti, inclinazione limitata tra −10° e 60°.
 - **URL.** `?pg=golden|ninja|golem|mago|vichinga` (predefinito golden), `?level=palestra` (unico livello, predefinito).
 
 ## Vincoli globali

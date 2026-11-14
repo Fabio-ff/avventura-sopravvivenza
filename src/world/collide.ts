@@ -1,7 +1,7 @@
 // Collisioni corpo-scatole. Il corpo è un cilindro verticale; per le collisioni la sua
 // impronta è approssimata da un quadrato di lato 2*raggio (semplice e senza incastri).
 // Nessuna dipendenza da three.
-import type { Solid, Vec3 } from './solids';
+import type { Solid, SolidKind, Vec3 } from './solids';
 
 /** Cilindro verticale: `position` è il centro della base. */
 export interface Body {
@@ -268,33 +268,48 @@ export function moveBody(
 }
 
 /**
- * Frazione [0,1] del primo impatto del segmento con una scatola `fisso`, oppure null.
- * Usata dalla camera. Se parte dentro una scatola, quella è ignorata; se parte su una faccia ed entra, vale 0.
+ * Frazione [0,1] in cui il segmento entra nella scatola, oppure null.
+ * Se parte dentro la scatola è ignorata; se parte su una faccia ed entra, vale 0; sfiorare o uscire non conta.
  */
-export function segmentHitsSolids(from: Vec3, to: Vec3, solids: readonly Solid[]): number | null {
+export function segmentHitsSolid(from: Vec3, to: Vec3, s: Solid): number | null {
   const d = { x: to.x - from.x, y: to.y - from.y, z: to.z - from.z };
+  let t0 = 0;
+  let t1 = 1;
+  let inside = true;
+  for (const a of ['x', 'y', 'z'] as const) {
+    if (Math.abs(d[a]) < 1e-12) {
+      if (from[a] < s.min[a] || from[a] > s.max[a]) return null;
+      if (from[a] <= s.min[a] || from[a] >= s.max[a]) inside = false;
+      continue;
+    }
+    if (from[a] <= s.min[a] || from[a] >= s.max[a]) inside = false;
+    let ta = (s.min[a] - from[a]) / d[a];
+    let tb = (s.max[a] - from[a]) / d[a];
+    if (ta > tb) [ta, tb] = [tb, ta];
+    if (ta > t0) t0 = ta;
+    if (tb < t1) t1 = tb;
+  }
+  // deve entrare davvero (tratto > 0)
+  return !inside && t1 - t0 > 1e-9 ? t0 : null;
+}
+
+const ONLY_FIXED: readonly SolidKind[] = ['fisso'];
+
+/**
+ * Frazione [0,1] del primo impatto del segmento con una scatola dei tipi dati (predefinito: solo
+ * `fisso`), oppure null. Usata dalla camera.
+ */
+export function segmentHitsSolids(
+  from: Vec3,
+  to: Vec3,
+  solids: readonly Solid[],
+  kinds: readonly SolidKind[] = ONLY_FIXED,
+): number | null {
   let best: number | null = null;
   for (const s of solids) {
-    if (s.kind !== 'fisso') continue;
-    let t0 = 0;
-    let t1 = 1;
-    let ok = true;
-    let inside = true;
-    for (const a of ['x', 'y', 'z'] as const) {
-      if (Math.abs(d[a]) < 1e-12) {
-        if (from[a] < s.min[a] || from[a] > s.max[a]) ok = false;
-        if (from[a] <= s.min[a] || from[a] >= s.max[a]) inside = false;
-        continue;
-      }
-      if (from[a] <= s.min[a] || from[a] >= s.max[a]) inside = false;
-      let ta = (s.min[a] - from[a]) / d[a];
-      let tb = (s.max[a] - from[a]) / d[a];
-      if (ta > tb) [ta, tb] = [tb, ta];
-      if (ta > t0) t0 = ta;
-      if (tb < t1) t1 = tb;
-    }
-    // deve entrare davvero (tratto > 0): uscire o sfiorare non conta
-    if (ok && !inside && t1 - t0 > 1e-9 && (best === null || t0 < best)) best = t0;
+    if (!kinds.includes(s.kind)) continue;
+    const t = segmentHitsSolid(from, to, s);
+    if (t !== null && (best === null || t < best)) best = t;
   }
   return best;
 }

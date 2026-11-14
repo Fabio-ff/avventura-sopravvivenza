@@ -8,6 +8,7 @@ import {
   mergeFrames,
   neutralFrame,
 } from '../src/input/logic';
+import { keyLook, KEY_PITCH_SPEED, KEY_YAW_SPEED } from '../src/input/logic';
 import { KeyboardBackend } from '../src/input/keyboard';
 import { GamepadBackend, readPad } from '../src/input/gamepad';
 
@@ -197,5 +198,27 @@ describe('gamepad', () => {
         throw new Error('x');
       }).sample(0.016),
     ).toEqual(neutralFrame());
+  });
+});
+
+describe('tasti di camera', () => {
+  it('E gira a destra, Q a sinistra, R alza e F abbassa, a velocità costante', () => {
+    expect(keyLook(false, true, false, false, 0.5).x).toBeCloseTo(KEY_YAW_SPEED * 0.5);
+    expect(keyLook(true, false, false, false, 0.5).x).toBeCloseTo(-KEY_YAW_SPEED * 0.5);
+    expect(keyLook(false, false, true, false, 0.5).y).toBeCloseTo(KEY_PITCH_SPEED * 0.5);
+    expect(keyLook(false, false, false, true, 0.5).y).toBeCloseTo(-KEY_PITCH_SPEED * 0.5);
+    expect(keyLook(true, true, true, true, 1)).toEqual({ x: 0, y: 0 });
+    expect(keyLook(true, false, false, false, 0)).toEqual({ x: -0, y: 0 });
+  });
+
+  it('il frame della tastiera usa dt e blur azzera i tasti', () => {
+    const w = new EventTarget() as unknown as Window;
+    const kb = new KeyboardBackend(w);
+    w.dispatchEvent(
+      Object.assign(new Event('keydown'), { code: 'KeyE', preventDefault: () => {} }),
+    );
+    expect(kb.sample(0.1).lookX).toBeCloseTo(KEY_YAW_SPEED * 0.1);
+    w.dispatchEvent(new Event('blur'));
+    expect(kb.sample(0.1).lookX).toBe(0);
   });
 });
