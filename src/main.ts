@@ -1,18 +1,34 @@
 import { consumeSteps, FIXED_STEP, GameLoop } from './app/game-loop';
 import { createSceneContext, showError } from './app/scene-setup';
 import { readUrlOptions } from './app/url-options';
-import { FollowCamera, updateCameraAngles } from './camera/follow-camera';
+import {
+  FollowCamera,
+  occluders,
+  updateCameraAngles,
+  type OcclusionTargets,
+} from './camera/follow-camera';
 import { InputManager } from './input/input-manager';
 import { JumpLatch } from './input/jump-latch';
 import levelJson from './missions/palestra/level.json';
 import { createPlayer, stepPlayer, teleport } from './player/controller';
 import { profileFor } from './player/profiles';
+import { OcclusionFader } from './render/occlusion-fade';
 import { PlayerView } from './render/player-view';
 import { FpsCounter } from './ui/debug-overlay';
 import { buildLevel, validateLevel, type BuiltLevel } from './world/build-level';
 
 /** Ogni quanti secondi si aggiorna `body[data-pos]` (per lo smoke). */
 const POS_INTERVAL = 0.25;
+
+function setPoint(
+  out: { x: number; y: number; z: number },
+  p: { x: number; y: number; z: number },
+  h: number,
+): void {
+  out.x = p.x;
+  out.y = p.y + h;
+  out.z = p.z;
+}
 
 async function start(): Promise<void> {
   const app = document.getElementById('app');
@@ -46,6 +62,14 @@ async function start(): Promise<void> {
   const followCamera = new FollowCamera(camera);
   const input = new InputManager();
   input.attach(renderer.domElement);
+
+  const fader = new OcclusionFader(level.meshes);
+  const coverTargets: OcclusionTargets = {
+    head: { x: 0, y: 0, z: 0 },
+    chest: { x: 0, y: 0, z: 0 },
+    feet: { x: 0, y: 0, z: 0 },
+  };
+  const covering: number[] = [];
 
   const counter = options.showFps ? new FpsCounter(document.body) : null;
 
@@ -96,6 +120,15 @@ async function start(): Promise<void> {
     level.sync();
     view.update(player, level.solids, dt);
     followCamera.update(player.position, level.solids, dt, player.crouching);
+
+    // ostacoli tra camera e personaggio: sfumano
+    const pp = player.position;
+    const crouch = player.crouching;
+    setPoint(coverTargets.head, pp, crouch ? 1.1 : 1.7);
+    setPoint(coverTargets.chest, pp, crouch ? 0.6 : 0.9);
+    setPoint(coverTargets.feet, pp, 0.1);
+    occluders(camera.position, coverTargets, level.solids, covering);
+    fader.update(covering, dt);
 
     posTimer += dt;
     if (posTimer >= POS_INTERVAL) {

@@ -1,4 +1,4 @@
-import { LOOK_RAD_PER_PIXEL } from './logic';
+import { keyLook, LOOK_RAD_PER_PIXEL } from './logic';
 import type { InputBackend, InputFrame } from './types';
 
 export interface KeyMap {
@@ -9,9 +9,13 @@ export interface KeyMap {
   jump: string[];
   crouch: string[];
   walk: string[];
+  lookLeft: string[];
+  lookRight: string[];
+  lookUp: string[];
+  lookDown: string[];
 }
 
-/** WASD e frecce, Spazio salta, C accovacciati, Maiusc cammina. Usa KeyboardEvent.code. */
+/** WASD e frecce, Spazio salta, C accovacciati, Maiusc cammina, Q/E ruotano la visuale, R/F la alzano e abbassano. Usa KeyboardEvent.code. */
 export const DEFAULT_KEY_MAP: KeyMap = {
   forward: ['KeyW', 'ArrowUp'],
   back: ['KeyS', 'ArrowDown'],
@@ -20,6 +24,10 @@ export const DEFAULT_KEY_MAP: KeyMap = {
   jump: ['Space'],
   crouch: ['KeyC'],
   walk: ['ShiftLeft', 'ShiftRight'],
+  lookLeft: ['KeyQ'],
+  lookRight: ['KeyE'],
+  lookUp: ['KeyR'],
+  lookDown: ['KeyF'],
 };
 
 /** Tastiera più mouse trascinato sul canvas per ruotare la camera. */
@@ -53,18 +61,25 @@ export class KeyboardBackend implements InputBackend {
     this.target.addEventListener('pointercancel', this.onPointerEnd);
   }
 
-  sample(): InputFrame {
+  sample(dt = 0): InputFrame {
     const x = (this.any(this.map.right) ? 1 : 0) - (this.any(this.map.left) ? 1 : 0);
     const y = (this.any(this.map.forward) ? 1 : 0) - (this.any(this.map.back) ? 1 : 0);
     const len = Math.hypot(x, y) || 1;
+    const key = keyLook(
+      this.any(this.map.lookLeft),
+      this.any(this.map.lookRight),
+      this.any(this.map.lookUp),
+      this.any(this.map.lookDown),
+      dt,
+    );
     const frame: InputFrame = {
       moveX: x / len,
       moveY: y / len,
       walk: this.any(this.map.walk),
       jump: this.any(this.map.jump),
       crouch: this.any(this.map.crouch),
-      lookX: this.lookX,
-      lookY: this.lookY,
+      lookX: this.lookX + key.x,
+      lookY: this.lookY + key.y,
     };
     this.lookX = 0;
     this.lookY = 0;

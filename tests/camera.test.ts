@@ -7,9 +7,14 @@ import {
   createCameraAngles,
   desiredDistance,
   desiredPose,
+  occluders,
+  MIN_DISTANCE,
+  DEFAULT_PITCH,
   smoothDistance,
   updateCameraAngles,
 } from '../src/camera/follow-camera';
+import { bodyOverlaps } from '../src/world/collide';
+import { cameraOffsetDir } from '../src/camera/follow-camera';
 import { box } from '../src/world/solids';
 
 describe('angoli della camera', () => {
@@ -129,18 +134,54 @@ describe('distanza della camera', () => {
     expect(d).toBeGreaterThan(2);
   });
 
-  it('sotto 1,2 m alza la camera invece di avvicinarla', () => {
-    // muro a 1 m dalla camera voluta: la distanza resta almeno 1,2 e l'inclinazione sale
-    const muro = box(1, 'fisso', { x: -5, y: 0, z: 0.8 }, { x: 5, y: 5, z: 1.2 });
+  it('sotto 1,2 m prova ad alzare la camera invece di avvicinarla', () => {
+    // muro a 0,8 m dal punto inquadrato, ma basso: alzandosi la camera lo scavalca
+    const muro = box(1, 'fisso', { x: -5, y: 0, z: 0.8 }, { x: 5, y: 2, z: 1.2 });
     const pose = desiredPose(focus, 0, 0.3, [muro]);
-    expect(pose.distance).toBeGreaterThanOrEqual(1.2);
     expect(pose.pitch).toBeGreaterThan(0.3);
+    expect(pose.distance).toBeGreaterThanOrEqual(MIN_DISTANCE);
     expect(desiredPose(focus, 0, 0.3, []).pitch).toBe(0.3);
   });
 
-  it('ignora scatole non fisse', () => {
+  it('inclinazione predefinita 25 gradi', () => {
+    expect((DEFAULT_PITCH * 180) / Math.PI).toBeCloseTo(25);
+  });
+
+  it('un masso spingibile tra camera e personaggio accorcia la distanza', () => {
     const masso = box(1, 'spingibile', { x: -5, y: 0, z: 3 }, { x: 5, y: 3, z: 4 });
-    expect(desiredDistance(focus, 0, 0, [masso])).toBe(CAMERA_DISTANCE);
+    expect(desiredDistance(focus, 0, 0, [masso])).toBeLessThan(3);
+  });
+
+  it('uno spigolo mancato dal raggio centrale ma colpito da uno laterale accorcia', () => {
+    // colonna a destra (x da 0,2 a 1), a z = 3: il raggio centrale (x = 0) la manca di 0,2 m
+    const colonna = box(1, 'fisso', { x: 0.2, y: 0, z: 3 }, { x: 1, y: 4, z: 4 });
+    expect(desiredDistance(focus, 0, 0, [colonna])).toBeLessThan(3);
+    // a 0,5 m dal raggio centrale nessun raggio la prende
+    const lontana = box(2, 'fisso', { x: 0.5, y: 0, z: 3 }, { x: 1.5, y: 4, z: 4 });
+    expect(desiredDistance(focus, 0, 0, [lontana])).toBe(CAMERA_DISTANCE);
+  });
+
+  it('con un muro alto 4 m a 0,5 m alle spalle la camera non finisce in nessuna scatola', () => {
+    const muro = box(1, 'fisso', { x: -10, y: 0, z: 0.5 }, { x: 10, y: 4, z: 1.5 });
+    const pavimento = box(2, 'fisso', { x: -10, y: -1, z: -10 }, { x: 10, y: 0, z: 10 });
+    const solids = [muro, pavimento];
+    for (const yaw of [0, 0.4, -0.7]) {
+      for (const pitch0 of [MIN_PITCH, 0, DEFAULT_PITCH, MAX_PITCH]) {
+        const pose = desiredPose(focus, yaw, pitch0, solids);
+        const dir = cameraOffsetDir(yaw, pose.pitch);
+        const pos = {
+          x: focus.x + dir.x * pose.distance,
+          y: focus.y + dir.y * pose.distance,
+          z: focus.z + dir.z * pose.distance,
+        };
+        const probe = {
+          position: { x: pos.x, y: pos.y - 0.05, z: pos.z },
+          radius: 0.05,
+          height: 0.1,
+        };
+        expect(bodyOverlaps(probe, solids)).toBe(false);
+      }
+    }
   });
 
   it('si accorcia subito e si allunga piano', () => {
@@ -148,5 +189,34 @@ describe('distanza della camera', () => {
     const next = smoothDistance(2, 6, 0.016);
     expect(next).toBeGreaterThan(2);
     expect(next).toBeLessThan(2.5);
+  });
+});
+
+describe('ostacoli che coprono il personaggio', () => {
+  const cam = { x: 0, y: 2, z: 5 };
+  const targets = {
+    head: { x: 0, y: 1.7, z: 0 },
+    chest: { x: 0, y: 0.9, z: 0 },
+    feet: { x: 0, y: 0.1, z: 0 },
+  };
+
+  it('un muro in mezzo viene restituito', () => {
+    const muro = box(7, 'fisso', { x: -3, y: 0, z: 2 }, { x: 3, y: 4, z: 3 });
+    expect(occluders(cam, targets, [muro])).toEqual([7]);
+  });
+
+  it('il pavimento sotto i piedi non conta', () => {
+    const pavimento = box(1, 'fisso', { x: -9, y: -1, z: -9 }, { x: 9, y: 0, z: 9 });
+    expect(occluders(cam, targets, [pavimento])).toEqual([]);
+  });
+
+  it('una scatola di lato non conta', () => {
+    const lato = box(2, 'spingibile', { x: 2, y: 0, z: 1 }, { x: 4, y: 3, z: 3 });
+    expect(occluders(cam, targets, [lato])).toEqual([]);
+  });
+
+  it('un masso basso che copre solo i piedi viene restituito', () => {
+    const basso = box(3, 'spingibile', { x: -1, y: 0, z: 0.3 }, { x: 1, y: 0.8, z: 1.3 });
+    expect(occluders(cam, targets, [basso])).toEqual([3]);
   });
 });

@@ -101,6 +101,8 @@ export interface BuiltLevel {
   solids: Solid[];
   start: Vec3;
   group: THREE.Group;
+  /** Mesh di ogni scatola per id (il materiale è proprio di ogni scatola). */
+  meshes: Map<number, THREE.Mesh>;
   /** Da chiamare a ogni frame: porta le mesh mobili sulla posizione dei loro `Solid`. */
   sync(): void;
 }
@@ -109,6 +111,7 @@ export interface BuiltLevel {
 export function buildLevel(level: LevelData): BuiltLevel {
   const solids = toSolids(level);
   const group = new THREE.Group();
+  const meshes = new Map<number, THREE.Mesh>();
   const moving: { solid: Solid; mesh: THREE.Mesh }[] = [];
   const geometry = new THREE.BoxGeometry(1, 1, 1);
   level.scatole.forEach((b, i) => {
@@ -121,6 +124,7 @@ export function buildLevel(level: LevelData): BuiltLevel {
     mesh.position.set(b.posizione.x, b.posizione.y, b.posizione.z);
     mesh.name = b.nome;
     group.add(mesh);
+    meshes.set(b.id, mesh);
     if (b.tipo !== 'fisso') moving.push({ solid, mesh });
   });
   const sync = (): void => {
@@ -132,5 +136,5 @@ export function buildLevel(level: LevelData): BuiltLevel {
       );
     }
   };
-  return { solids, start: { ...level.partenza }, group, sync };
+  return { solids, start: { ...level.partenza }, group, meshes, sync };
 }
