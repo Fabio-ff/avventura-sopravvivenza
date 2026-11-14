@@ -15,9 +15,14 @@
 
 - Fase 1, Task 1 e 2 mergiati (PR #8 e #7): collisioni cilindro contro scatole, controller, profili dei cinque
   personaggi; comandi tastiera, gamepad e touch. PR #8 rivista da Opus e corretta (masso alzato a 1,5 m).
+- Fase 1, Task 3 mergiato (PR #9): palestra giocabile, camera che segue, vista del giocatore. Rivista da Opus e
+  corretta. Dopo la prova di Fabio (tastiera e trackpad): tasti di camera Q/E/R/F, ostacoli che coprono il
+  personaggio diventano trasparenti, camera a 4,5 m e 25°. Misure cambiate: recinzione 6 m, muro alto 4 m,
+  muro del varco 3,6 m.
 
 ## Prossimo passo
-- Fase 1, Task 3 (palestra giocabile e camera, `fase1/palestra`), poi Task 4 (vite, trappola mobile, HUD).
+- Fase 1, Task 3b (Titano elettrico giocabile con `?pg=titano`, `fase1/titano`), poi Task 4 (vite, trappola
+  mobile, HUD), poi chiusura di fase.
 - I merge li lancia Fabio o li chiede in modo esplicito: il classificatore blocca `gh pr merge` in autonomia.
 
 ## Prova sul tablet
@@ -25,7 +30,9 @@
 
 ## Da ricordare per le fasi successive
 - `golden.glb` contiene ancora le clip `dribble` e `shoot`: toglierle con la pipeline asset (fase 4).
-- Verificare all'inizio della fase 1 che `golden.glb` contenga le clip run, jump, hit e fall.
+- Titano elettrico (sesto personaggio): modello Tripo senza clip idle e run; texture da alleggerire (fase 4).
+  Originali in `sources/pbx/` e `sources/art/titan-electro.jpeg`, non ancora tracciati.
+- Correzioni alle PR #8 e #9 non riviste una seconda volta: le copre la revisione Opus di fine fase.
 - `dispose.ts` e i metodi `dispose`/`stop` sono copiati ma non ancora usati: servono dalla fase 1.
 
 ## Decisioni recenti
