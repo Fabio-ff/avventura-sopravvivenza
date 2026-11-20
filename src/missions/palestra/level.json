@@ -259,7 +259,8 @@
         "y": 1,
         "z": 1
       },
-      "colore": "#e5202e"
+      "colore": "#e5202e",
+      "moto": { "asse": "x", "ampiezza": 4, "periodo": 2 }
     },
     {
       "id": 17,

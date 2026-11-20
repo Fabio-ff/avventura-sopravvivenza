@@ -82,6 +82,12 @@ async function run() {
   const expected = process.env.SMOKE_EXPECT ?? 'golden';
   if (ready !== expected) throw new Error(`data-ready=${ready}, atteso ${expected}`);
 
+  // Le vite: 3 con Golden, mostrate anche nei cuori; il Golem ne ha 4 (controllato sotto).
+  const viteGolden = await page.evaluate(() => document.body.dataset.vite);
+  if (viteGolden !== '3') throw new Error(`?pg=golden: data-vite=${viteGolden}, atteso 3`);
+  if ((await page.locator('.hud-heart').count()) !== 3)
+    throw new Error('?pg=golden: attesi 3 cuori');
+
   // Il contatore fps mostra un numero maggiore di zero.
   await page.waitForFunction(
     () => {
@@ -113,6 +119,17 @@ async function run() {
   const readyTitano = await titano.evaluate(() => document.body.dataset.ready);
   if (readyTitano !== 'titano')
     throw new Error(`?pg=titano: data-ready=${readyTitano}, atteso titano`);
+
+  // Il Golem parte con 4 vite.
+  const golem = await browser.newPage({ viewport: { width: 640, height: 360 } });
+  golem.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+  golem.on('pageerror', (e) => errors.push(String(e)));
+  await golem.goto(`${BASE}?pg=golem`);
+  await golem.waitForSelector('body[data-ready]', { timeout: 30_000 });
+  const viteGolem = await golem.evaluate(() => document.body.dataset.vite);
+  if (viteGolem !== '4') throw new Error(`?pg=golem: data-vite=${viteGolem}, atteso 4`);
 
   // Il segnaposto scrive un avviso voluto: non è un errore.
   if (errors.length) throw new Error(`errori in console:\n${errors.join('\n')}`);

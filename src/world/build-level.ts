@@ -1,5 +1,6 @@
 // Dal file del livello alle scatole di collisione e alle mesh. La validazione è pura.
 import * as THREE from 'three';
+import { createMover, placeMover, validateMoto, type Moto, type Mover } from './movers';
 import { box, type Solid, type SolidKind, type Vec3 } from './solids';
 
 export interface LevelBox {
@@ -11,6 +12,8 @@ export interface LevelBox {
   /** Dimensioni complete. */
   dimensioni: Vec3;
   colore: string;
+  /** Facoltativo, solo per i `pericolo`: la scatola va avanti e indietro (posizione = centro del moto). */
+  moto?: Moto;
 }
 
 export interface LevelData {
@@ -57,7 +60,19 @@ export function validateLevel(raw: unknown): LevelData {
     if (typeof o.colore !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(o.colore))
       throw new Error(`${ctx}: il colore deve essere nel formato #rrggbb`);
     const nome = typeof o.nome === 'string' ? o.nome : `scatola ${o.id}`;
-    return { id: o.id, nome, tipo: o.tipo as SolidKind, posizione, dimensioni, colore: o.colore };
+    const out: LevelBox = {
+      id: o.id,
+      nome,
+      tipo: o.tipo as SolidKind,
+      posizione,
+      dimensioni,
+      colore: o.colore,
+    };
+    if (o.moto !== undefined) {
+      if (o.tipo !== 'pericolo') throw new Error(`${ctx}: solo un pericolo può avere un "moto"`);
+      out.moto = validateMoto(o.moto, ctx);
+    }
+    return out;
   });
   const level = { partenza, scatole };
   if (!standsOnSlab(toSolids(level), partenza))
@@ -105,6 +120,12 @@ export interface BuiltLevel {
   meshes: Map<number, THREE.Mesh>;
   /** Da chiamare a ogni frame: porta le mesh mobili sulla posizione dei loro `Solid`. */
   sync(): void;
+  /** Porta le scatole in moto (la trappola) nella posizione che hanno al tempo `t`. */
+  setMoverTime(t: number): void;
+  /** Il moto della scatola `id`, se ne ha uno. */
+  motoOf(id: number): Moto | undefined;
+  /** Rimette masso e scatole spingibili al loro posto e la trappola al tempo zero. */
+  reset(): void;
 }
 
 /** Costruisce scatole e mesh. Le mesh di `spingibile` e `pericolo` seguono il rispettivo `Solid`. */
@@ -113,6 +134,8 @@ export function buildLevel(level: LevelData): BuiltLevel {
   const group = new THREE.Group();
   const meshes = new Map<number, THREE.Mesh>();
   const moving: { solid: Solid; mesh: THREE.Mesh }[] = [];
+  const movers: Mover[] = [];
+  const initial: { solid: Solid; min: Vec3; max: Vec3 }[] = [];
   const geometry = new THREE.BoxGeometry(1, 1, 1);
   level.scatole.forEach((b, i) => {
     const solid = solids[i]!;
@@ -126,6 +149,9 @@ export function buildLevel(level: LevelData): BuiltLevel {
     group.add(mesh);
     meshes.set(b.id, mesh);
     if (b.tipo !== 'fisso') moving.push({ solid, mesh });
+    if (b.tipo === 'spingibile')
+      initial.push({ solid, min: { ...solid.min }, max: { ...solid.max } });
+    if (b.moto) movers.push(createMover(solid, b.moto));
   });
   const sync = (): void => {
     for (const { solid, mesh } of moving) {
@@ -136,5 +162,18 @@ export function buildLevel(level: LevelData): BuiltLevel {
       );
     }
   };
-  return { solids, start: { ...level.partenza }, group, meshes, sync };
+  const setMoverTime = (t: number): void => {
+    for (const m of movers) placeMover(m, t);
+  };
+  const motoOf = (id: number): Moto | undefined => movers.find((m) => m.solid.id === id)?.moto;
+  const reset = (): void => {
+    for (const { solid, min, max } of initial) {
+      Object.assign(solid.min, min);
+      Object.assign(solid.max, max);
+    }
+    setMoverTime(0);
+  };
+  setMoverTime(0);
+  sync();
+  return { solids, start: { ...level.partenza }, group, meshes, sync, setMoverTime, motoOf, reset };
 }

@@ -10,7 +10,15 @@ import {
 import { InputManager } from './input/input-manager';
 import { JumpLatch } from './input/jump-latch';
 import levelJson from './missions/palestra/level.json';
-import { createPlayer, stepPlayer, teleport } from './player/controller';
+import { Hud } from './hud/hud';
+import {
+  applyKnockback,
+  createPlayer,
+  stepPlayer,
+  teleport,
+  type PlayerInput,
+} from './player/controller';
+import { blinkHidden, createLives, registerFall, registerHit, tickLives } from './player/lives';
 import { profileFor } from './player/profiles';
 import { OcclusionFader } from './render/occlusion-fade';
 import { PlayerView } from './render/player-view';
@@ -18,6 +26,8 @@ import { showCharacterMenu, showMenuButton } from './ui/character-menu';
 import { FpsCounter } from './ui/debug-overlay';
 import { screenFor } from './ui/menu-logic';
 import { buildLevel, validateLevel, type BuiltLevel } from './world/build-level';
+import { knockOrigin } from './world/movers';
+import type { Solid } from './world/solids';
 
 /** Ogni quanti secondi si aggiorna `body[data-pos]` (per lo smoke). */
 const POS_INTERVAL = 0.25;
@@ -79,6 +89,9 @@ async function start(): Promise<void> {
   };
   const covering: number[] = [];
 
+  const lives = createLives(profile.vite);
+  const hud = new Hud(document.body, profile.nome, profile.vite);
+
   const counter = options.showFps ? new FpsCounter(document.body) : null;
 
   const writePos = (): void => {
@@ -90,6 +103,12 @@ async function start(): Promise<void> {
 
   const jumpLatch = new JumpLatch();
   let accumulator = 0;
+  /** Tempo di simulazione per la trappola: avanza solo a passi fissi, quindi mai a salti dopo una pausa. */
+  let simTime = 0;
+  // Oggetti riusati a ogni passo, per non allocare nei percorsi caldi.
+  const stepInput: PlayerInput = { moveX: 0, moveY: 0, walk: false, jump: false, crouch: false };
+  const origin = { x: 0, y: 0, z: 0 };
+  const solidById = new Map<number, Solid>(level.solids.map((s) => [s.id, s]));
   let posTimer = 0;
   const loop = new GameLoop((dt, rawDt) => {
     const frame = input.read();
@@ -107,9 +126,18 @@ async function start(): Promise<void> {
     const stepped = consumeSteps(accumulator, dt);
     accumulator = stepped.accumulator;
     for (let i = 0; i < stepped.steps; i++) {
+      // la trappola si muove prima del giocatore: il contatto vale anche a giocatore fermo
+      simTime += FIXED_STEP;
+      level.setMoverTime(simTime);
+      const defeated = lives.phase === 'sconfitto';
+      stepInput.moveX = defeated ? 0 : frame.moveX;
+      stepInput.moveY = defeated ? 0 : frame.moveY;
+      stepInput.walk = !defeated && frame.walk;
+      stepInput.crouch = !defeated && frame.crouch;
+      stepInput.jump = !defeated && jumpLatch.value();
       const events = stepPlayer(
         player,
-        { ...frame, jump: jumpLatch.value() },
+        stepInput,
         followCamera.angles.yaw,
         profile,
         level.solids,
@@ -117,14 +145,33 @@ async function start(): Promise<void> {
       );
       jumpLatch.consume();
       for (const event of events) {
-        // Le vite arrivano nel Task 4: per ora si torna all'ultimo punto sicuro.
-        if (event.type === 'caduto') {
+        if (event.type === 'colpito') {
+          if (registerHit(lives) === null) continue;
+          const trap = solidById.get(event.hazardId);
+          if (trap)
+            applyKnockback(
+              player,
+              knockOrigin(origin, trap, level.motoOf(trap.id), player.position),
+            );
+        } else if (registerFall(lives) !== null) {
+          // una vita in meno (anche l'ultima: la scritta compare sul punto sicuro)
           teleport(player, player.safePoint, level.solids);
           followCamera.snap();
         }
       }
+      if (tickLives(lives, FIXED_STEP) === 'ripartenza') {
+        // ripartenza: partenza, masso e spingibili al loro posto, trappola al tempo zero
+        level.reset();
+        simTime = 0;
+        teleport(player, level.start, level.solids);
+        player.facing = Math.PI;
+        followCamera.snap();
+      }
     }
 
+    hud.setLives(lives.vite);
+    hud.setDefeat(lives.phase === 'sconfitto');
+    view.setBlinkHidden(blinkHidden(lives.invuln));
     level.sync();
     view.update(player, level.solids, dt);
     followCamera.update(player.position, level.solids, dt, player.crouching);
