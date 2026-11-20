@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   CAMERA_DISTANCE,
   CLOSE_DISTANCE,
+  FALLBACK_HYSTERESIS,
+  FOCUS_HEIGHT,
   CROUCH_FOCUS_HEIGHT,
   modelOpacity,
   MAX_PITCH,
@@ -16,7 +18,6 @@ import {
   smoothDistance,
   updateCameraAngles,
 } from '../src/camera/follow-camera';
-import { bodyOverlaps } from '../src/world/collide';
 import { cameraOffsetDir } from '../src/camera/follow-camera';
 import { box } from '../src/world/solids';
 import levelJson from '../src/missions/palestra/level.json';
@@ -166,39 +167,75 @@ describe('distanza della camera', () => {
     expect(desiredDistance(focus, 0, 0, [lontana])).toBe(CAMERA_DISTANCE);
   });
 
-  it('con un muro alto 4 m a 0,5 m alle spalle la camera non finisce in nessuna scatola', () => {
+  it('con un muro alto 4 m a 0,5 m alle spalle la camera resta alla distanza piena e il muro è tra gli occluders', () => {
     const muro = box(1, 'fisso', { x: -10, y: 0, z: 0.5 }, { x: 10, y: 4, z: 1.5 });
     const pavimento = box(2, 'fisso', { x: -10, y: -1, z: -10 }, { x: 10, y: 0, z: 10 });
     const solids = [muro, pavimento];
     for (const yaw of [0, 0.4, -0.7]) {
       for (const pitch0 of [MIN_PITCH, 0, DEFAULT_PITCH, MAX_PITCH]) {
         const pose = desiredPose(focus, yaw, pitch0, solids);
+        expect(pose.throughWall).toBe(true);
+        expect(pose.distance).toBe(CAMERA_DISTANCE);
+        expect(pose.pitch).toBe(pitch0);
         const dir = cameraOffsetDir(yaw, pose.pitch);
-        const pos = {
+        const cam = {
           x: focus.x + dir.x * pose.distance,
           y: focus.y + dir.y * pose.distance,
           z: focus.z + dir.z * pose.distance,
         };
-        const probe = {
-          position: { x: pos.x, y: pos.y - 0.05, z: pos.z },
-          radius: 0.05,
-          height: 0.1,
+        const targets = {
+          head: { x: 0, y: 1.7, z: 0 },
+          chest: { x: 0, y: 0.9, z: 0 },
+          feet: { x: 0, y: 0.1, z: 0 },
         };
-        expect(bodyOverlaps(probe, solids)).toBe(false);
-        // se la camera è vicinissima il modello deve sparire (mai la camera nella testa con il modello visibile)
-        if (pose.distance < CLOSE_DISTANCE) expect(modelOpacity(pose.distance)).toBeLessThan(1);
-        else expect(modelOpacity(pose.distance)).toBe(1);
+        expect(occluders(cam, targets, solids)).toContain(1);
       }
     }
   });
 
-  it('con il muro a 0,5 m alle spalle la distanza è la migliore trovata e il modello sfuma', () => {
-    const muro = box(1, 'fisso', { x: -10, y: 0, z: 0.5 }, { x: 10, y: 4, z: 1.5 });
-    const pose = desiredPose(focus, 0, DEFAULT_PITCH, [muro]);
-    // nessuna inclinazione fa meglio: la distanza è comunque la massima tra quelle provate
+  it('a 0,5 m dalla recinzione vera la camera alle spalle sta a 4,5 m e la recinzione sfuma', () => {
+    const solids = toSolids(validateLevel(levelJson));
+    const retro = solids.find((x) => x.max.z === 10 && x.min.z === 9)!;
+    // yaw 0: la camera sta a +z, cioè dietro la recinzione "recinto retro" (z da 9 a 10)
+    const f = { x: 0, y: FOCUS_HEIGHT, z: 8.5 };
+    const pose = desiredPose(f, 0, DEFAULT_PITCH, solids);
+    expect(pose.distance).toBe(CAMERA_DISTANCE);
+    const dir = cameraOffsetDir(0, pose.pitch);
+    const cam = {
+      x: f.x + dir.x * pose.distance,
+      y: f.y + dir.y * pose.distance,
+      z: f.z + dir.z * pose.distance,
+    };
+    const targets = {
+      head: { x: 0, y: 1.7, z: 8.5 },
+      chest: { x: 0, y: 0.9, z: 8.5 },
+      feet: { x: 0, y: 0.1, z: 8.5 },
+    };
+    expect(occluders(cam, targets, solids)).toContain(retro.id);
+  });
+
+  it('con la camera dentro una scatola la scatola è tra gli occluders', () => {
+    const blocco = box(5, 'fisso', { x: -1, y: 0, z: 2 }, { x: 1, y: 4, z: 4 });
+    const targets = {
+      head: { x: 0, y: 1.7, z: 0 },
+      chest: { x: 0, y: 0.9, z: 0 },
+      feet: { x: 0, y: 0.1, z: 0 },
+    };
+    expect(occluders({ x: 0, y: 2, z: 3 }, targets, [blocco])).toEqual([5]);
+  });
+
+  it('isteresi: con la camera oltre il muro serve più spazio per tornare davanti', () => {
+    const muro = box(1, 'fisso', { x: -10, y: -5, z: 1.2 }, { x: 10, y: 20, z: 2.2 });
+    let migliore = 0;
     for (let p = MIN_PITCH; p <= MAX_PITCH + 1e-9; p += (5 * Math.PI) / 180)
-      expect(desiredDistance(focus, 0, p, [muro])).toBeLessThanOrEqual(pose.distance + 1e-9);
-    expect(modelOpacity(pose.distance)).toBeLessThan(1);
+      migliore = Math.max(migliore, desiredDistance(focus, 0, p, [muro]));
+    // spazio disponibile appena sopra il minimo: si entra davanti, ma da dietro il muro non si esce
+    expect(migliore).toBeGreaterThan(MIN_DISTANCE);
+    expect(migliore).toBeLessThan(MIN_DISTANCE + FALLBACK_HYSTERESIS);
+    expect(desiredPose(focus, 0, 0, [muro], MIN_DISTANCE).throughWall).toBe(false);
+    expect(desiredPose(focus, 0, 0, [muro], MIN_DISTANCE + FALLBACK_HYSTERESIS).throughWall).toBe(
+      true,
+    );
   });
 
   it('inclinazioni più basse quando quelle più alte non bastano', () => {

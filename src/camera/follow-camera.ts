@@ -138,40 +138,49 @@ export function desiredDistance(
   return Math.min(max, Math.max(0, best * max - WALL_MARGIN));
 }
 
+/** Isteresi: uscendo dal ripiego "oltre il muro" servono `MIN_DISTANCE` più questo margine. */
+export const FALLBACK_HYSTERESIS = 0.4;
+
+export interface CameraPose {
+  distance: number;
+  pitch: number;
+  /**
+   * Vero se nessuna inclinazione arriva a `minDistance`: la camera resta all'inclinazione voluta e
+   * alla distanza piena, oltre il muro. La visibilità la garantisce la sfumatura degli ostacoli.
+   */
+  throughWall: boolean;
+}
+
 /**
  * Distanza e inclinazione da usare. Se con l'inclinazione voluta la camera resterebbe sotto
- * `MIN_DISTANCE` (muro alle spalle, architrave sopra la testa) si provano, a passi di 5 gradi tra
+ * `minDistance` (muro alle spalle, architrave sopra la testa) si provano, a passi di 5 gradi tra
  * `MIN_PITCH` e `MAX_PITCH`, le inclinazioni sia più alte sia più basse: vale la più vicina a
- * quella voluta che arriva a `MIN_DISTANCE`, altrimenti quella con la distanza maggiore. La
- * distanza non viene mai gonfiata oltre il muro, così la camera non finisce dentro una scatola.
+ * quella voluta che arriva a `minDistance`. Se nessuna ci arriva la camera NON si avvicina (finirebbe
+ * nella testa del personaggio): resta all'inclinazione voluta e alla distanza piena, anche oltre il
+ * muro, che sfuma perché sta tra camera e personaggio (`occluders`).
  */
 export function desiredPose(
   focus: Vec3,
   yaw: number,
   pitch: number,
   solids: readonly Solid[],
-): { distance: number; pitch: number } {
+  minDistance = MIN_DISTANCE,
+): CameraPose {
   const raw = desiredDistance(focus, yaw, pitch, solids);
-  if (raw >= MIN_DISTANCE) return { distance: raw, pitch };
-  let best = { distance: raw, pitch };
+  if (raw >= minDistance) return { distance: raw, pitch, throughWall: false };
+  let best: CameraPose | null = null;
   let bestGap = Infinity;
-  let found = false;
   const steps = Math.round((MAX_PITCH - MIN_PITCH) / PITCH_PROBE_STEP);
   for (let i = 0; i <= steps; i++) {
     const pp = MIN_PITCH + i * PITCH_PROBE_STEP;
     const dist = desiredDistance(focus, yaw, pp, solids);
     const gap = Math.abs(pp - pitch);
-    if (dist >= MIN_DISTANCE) {
-      if (!found || gap < bestGap) {
-        found = true;
-        bestGap = gap;
-        best = { distance: dist, pitch: pp };
-      }
-    } else if (!found && dist > best.distance) {
-      best = { distance: dist, pitch: pp };
+    if (dist >= minDistance && gap < bestGap) {
+      bestGap = gap;
+      best = { distance: dist, pitch: pp, throughWall: false };
     }
   }
-  return best;
+  return best ?? { distance: CAMERA_DISTANCE, pitch, throughWall: true };
 }
 
 /** Sotto questa distanza della camera il modello del personaggio sfuma fino a sparire. */
@@ -195,9 +204,20 @@ export interface OcclusionTargets {
 /** Tolleranza sulla quota dei piedi per riconoscere il pavimento su cui si sta. */
 const FLOOR_TOLERANCE = 0.05;
 
+function pointInside(p: Vec3, s: Solid): boolean {
+  return (
+    p.x > s.min.x &&
+    p.x < s.max.x &&
+    p.y > s.min.y &&
+    p.y < s.max.y &&
+    p.z > s.min.z &&
+    p.z < s.max.z
+  );
+}
+
 /**
  * Id delle scatole attraversate da almeno uno dei segmenti camera -> testa / busto / piedi.
- * Le scatole il cui lato superiore è ai piedi o sotto (il pavimento) non contano. Se si passa
+ * Vale anche se la camera è dentro la scatola. Le scatole il cui lato superiore è ai piedi o sotto (il pavimento) non contano. Se si passa
  * `out` viene riempito e restituito (nessuna allocazione).
  */
 export function occluders(
@@ -211,6 +231,7 @@ export function occluders(
   for (const s of solids) {
     if (s.max.y <= floorY) continue;
     if (
+      pointInside(cameraPos, s) ||
       segmentHitsSolid(cameraPos, targets.head, s) !== null ||
       segmentHitsSolid(cameraPos, targets.chest, s) !== null ||
       segmentHitsSolid(cameraPos, targets.feet, s) !== null
@@ -233,6 +254,7 @@ export class FollowCamera {
   private distance = CAMERA_DISTANCE;
   private pitch = DEFAULT_PITCH;
   private focusHeight = FOCUS_HEIGHT;
+  private throughWall = false;
 
   /** Distanza effettiva tra camera e punto inquadrato (serve a sfumare il modello se è vicinissima). */
   get currentDistance(): number {
@@ -263,7 +285,10 @@ export class FollowCamera {
       this.focus.z += (want.z - this.focus.z) * k;
     }
     const f = this.focus;
-    const pose = desiredPose(f, this.angles.yaw, this.angles.pitch, solids);
+    // con la camera oltre il muro si torna "davanti" solo se c'è un po' più di spazio del minimo
+    const minDistance = this.throughWall ? MIN_DISTANCE + FALLBACK_HYSTERESIS : MIN_DISTANCE;
+    const pose = desiredPose(f, this.angles.yaw, this.angles.pitch, solids, minDistance);
+    this.throughWall = pose.throughWall;
     if (first) {
       this.distance = pose.distance;
       this.pitch = pose.pitch;
