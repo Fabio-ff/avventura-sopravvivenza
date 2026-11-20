@@ -23,6 +23,14 @@ import type { LoadedModel } from './model-cache';
 export const CROSSFADE_SECONDS = 0.15;
 
 /**
+ * Passando a una clip la cui azione è la stessa di quella in corso (clip diverse del profilo che
+ * puntano alla stessa animazione) non si riparte da capo: cambia solo la velocità.
+ */
+export function needsReset(current: unknown, next: unknown): boolean {
+  return current !== next;
+}
+
+/**
  * Un personaggio disegnato con un modello vero: un `AnimationMixer` e una clip per stato scelta da
  * `clipFor`. `model` deve essere un'istanza propria (`instantiate`).
  */
@@ -30,6 +38,8 @@ export class CharacterView {
   readonly group = new Group();
   readonly mixer: AnimationMixer;
   private readonly actions = new Map<CanonicalClip, AnimationAction>();
+  /** Clip disponibili, calcolate una volta sola (niente allocazioni per frame). */
+  private readonly available: ReadonlySet<CanonicalClip>;
   private readonly root: Object3D;
   private readonly skinned: SkinnedMesh[] = [];
   private readonly speeds = new Map<CanonicalClip, number>();
@@ -49,6 +59,7 @@ export class CharacterView {
       this.actions.set(logical, this.mixer.clipAction(clip));
       this.speeds.set(logical, spec.velocita);
     }
+    this.available = new Set(this.actions.keys());
   }
 
   /** La clip canonica in corso, o null nella posa di base. */
@@ -58,7 +69,7 @@ export class CharacterView {
 
   /** Mostra lo stato (con dissolvenza dalla clip precedente) e fa avanzare l'animazione di `dt`. */
   update(state: CharacterState, dt: number): void {
-    this.select(resolveClip(clipFor(state), new Set(this.actions.keys())));
+    this.select(resolveClip(clipFor(state), this.available));
     this.mixer.update(Number.isFinite(dt) && dt > 0 ? dt : 0);
   }
 
@@ -72,6 +83,12 @@ export class CharacterView {
     const to = this.actions.get(clip);
     if (!to) return;
     const from = this.active ? this.actions.get(this.active) : undefined;
+    if (!needsReset(from, to)) {
+      // stessa azione: l'animazione continua, cambia solo la velocità
+      to.setEffectiveTimeScale(this.speeds.get(clip) ?? 1);
+      this.active = clip;
+      return;
+    }
     to.reset();
     to.enabled = true;
     to.setEffectiveWeight(1);

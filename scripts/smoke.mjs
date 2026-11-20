@@ -67,7 +67,12 @@ async function run() {
   await page.waitForSelector('canvas');
   await page.waitForSelector('body[data-ready]', { timeout: 30_000 });
 
-  // In gioco il pulsante "Personaggi" riporta al menu (indirizzo senza pg).
+  // In gioco il pulsante "Personaggi" vuole due tocchi: il primo chiede conferma, il secondo torna al menu.
+  await page.click('.menu-back');
+  if ((await page.locator('.menu-back').textContent()) !== 'Torna al menu?')
+    throw new Error('pulsante: manca la conferma al primo tocco');
+  if ((await page.locator('.menu-card').count()) !== 0)
+    throw new Error('pulsante: il primo tocco ha già riportato al menu');
   await page.click('.menu-back');
   await page.waitForSelector('.menu-card');
   if (new URL(page.url()).searchParams.has('pg'))

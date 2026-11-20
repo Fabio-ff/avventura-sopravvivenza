@@ -96,9 +96,14 @@ describe('level.json della palestra', () => {
     const golden = jumpReach(profileFor('golden'));
     const golem = jumpReach(profileFor('golem'));
     const ninja = jumpReach(profileFor('ninja'));
+    const titano = jumpReach(profileFor('titano'));
     expect(golem.distance).toBeGreaterThan(2);
     expect(golden.distance).toBeLessThan(5.5);
     expect(ninja.distance).toBeGreaterThan(5.5);
+    // il Titano supera il fossato da 2 m, non quello da 5,5 m né il muro da 1,6 m
+    expect(titano.distance).toBeGreaterThan(2);
+    expect(titano.distance).toBeLessThan(5.5);
+    expect(titano.height).toBeLessThan(1.6);
     expect(golden.height).toBeGreaterThan(0.8);
     expect(golden.height).toBeLessThan(1.5);
   });

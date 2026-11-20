@@ -83,7 +83,7 @@ export function cameraOffsetDir(yaw: number, pitch: number): Vec3 {
 
 /** Spostamento dei raggi laterali rispetto a quello centrale, in metri. */
 export const RAY_OFFSET = 0.3;
-/** Passo di prova delle inclinazioni intermedie quando la distanza è troppo corta. */
+/** Passo di prova delle inclinazioni quando la distanza è troppo corta. */
 const PITCH_PROBE_STEP = (5 * Math.PI) / 180;
 /** Tutte le scatole possono coprire la vista. */
 const VIEW_BLOCKERS: readonly SolidKind[] = ['fisso', 'spingibile', 'pericolo'];
@@ -138,28 +138,60 @@ export function desiredDistance(
   return Math.min(max, Math.max(0, best * max - WALL_MARGIN));
 }
 
+/** Isteresi: uscendo dal ripiego "oltre il muro" servono `MIN_DISTANCE` più questo margine. */
+export const FALLBACK_HYSTERESIS = 0.4;
+
+export interface CameraPose {
+  distance: number;
+  pitch: number;
+  /**
+   * Vero se nessuna inclinazione arriva a `minDistance`: la camera resta all'inclinazione voluta e
+   * alla distanza piena, oltre il muro. La visibilità la garantisce la sfumatura degli ostacoli.
+   */
+  throughWall: boolean;
+}
+
 /**
- * Distanza e inclinazione da usare: se il muro costringerebbe sotto `MIN_DISTANCE` (camera nella
- * testa) si prova ad alzare la camera, a passi, fino a `MAX_PITCH`: vale la prima posa abbastanza
- * lontana, altrimenti la più lontana trovata. La distanza non viene mai gonfiata oltre il muro,
- * così la camera non finisce dentro una scatola.
+ * Distanza e inclinazione da usare. Se con l'inclinazione voluta la camera resterebbe sotto
+ * `minDistance` (muro alle spalle, architrave sopra la testa) si provano, a passi di 5 gradi tra
+ * `MIN_PITCH` e `MAX_PITCH`, le inclinazioni sia più alte sia più basse: vale la più vicina a
+ * quella voluta che arriva a `minDistance`. Se nessuna ci arriva la camera NON si avvicina (finirebbe
+ * nella testa del personaggio): resta all'inclinazione voluta e alla distanza piena, anche oltre il
+ * muro, che sfuma perché sta tra camera e personaggio (`occluders`).
  */
 export function desiredPose(
   focus: Vec3,
   yaw: number,
   pitch: number,
   solids: readonly Solid[],
-): { distance: number; pitch: number } {
+  minDistance = MIN_DISTANCE,
+): CameraPose {
   const raw = desiredDistance(focus, yaw, pitch, solids);
-  if (raw >= MIN_DISTANCE) return { distance: raw, pitch };
-  let best = { distance: raw, pitch };
-  for (let p = pitch + PITCH_PROBE_STEP; p < MAX_PITCH + 1e-9; p += PITCH_PROBE_STEP) {
-    const pp = Math.min(MAX_PITCH, p);
+  if (raw >= minDistance) return { distance: raw, pitch, throughWall: false };
+  let best: CameraPose | null = null;
+  let bestGap = Infinity;
+  const steps = Math.round((MAX_PITCH - MIN_PITCH) / PITCH_PROBE_STEP);
+  for (let i = 0; i <= steps; i++) {
+    const pp = MIN_PITCH + i * PITCH_PROBE_STEP;
     const dist = desiredDistance(focus, yaw, pp, solids);
-    if (dist >= MIN_DISTANCE) return { distance: dist, pitch: pp };
-    if (dist > best.distance) best = { distance: dist, pitch: pp };
+    const gap = Math.abs(pp - pitch);
+    if (dist >= minDistance && gap < bestGap) {
+      bestGap = gap;
+      best = { distance: dist, pitch: pp, throughWall: false };
+    }
   }
-  return best;
+  return best ?? { distance: CAMERA_DISTANCE, pitch, throughWall: true };
+}
+
+/** Sotto questa distanza della camera il modello del personaggio sfuma fino a sparire. */
+export const CLOSE_DISTANCE = 0.7;
+/** A questa distanza (o meno) il modello è del tutto sparito. */
+export const FADE_END_DISTANCE = 0.35;
+
+/** Opacità del modello in funzione della distanza effettiva della camera: 1 da `CLOSE_DISTANCE` in su. */
+export function modelOpacity(distance: number): number {
+  if (distance >= CLOSE_DISTANCE) return 1;
+  return Math.max(0, (distance - FADE_END_DISTANCE) / (CLOSE_DISTANCE - FADE_END_DISTANCE));
 }
 
 /** Bersaglio per `occluders`: testa, busto e piedi del personaggio. */
@@ -172,9 +204,20 @@ export interface OcclusionTargets {
 /** Tolleranza sulla quota dei piedi per riconoscere il pavimento su cui si sta. */
 const FLOOR_TOLERANCE = 0.05;
 
+function pointInside(p: Vec3, s: Solid): boolean {
+  return (
+    p.x > s.min.x &&
+    p.x < s.max.x &&
+    p.y > s.min.y &&
+    p.y < s.max.y &&
+    p.z > s.min.z &&
+    p.z < s.max.z
+  );
+}
+
 /**
  * Id delle scatole attraversate da almeno uno dei segmenti camera -> testa / busto / piedi.
- * Le scatole il cui lato superiore è ai piedi o sotto (il pavimento) non contano. Se si passa
+ * Vale anche se la camera è dentro la scatola. Le scatole il cui lato superiore è ai piedi o sotto (il pavimento) non contano. Se si passa
  * `out` viene riempito e restituito (nessuna allocazione).
  */
 export function occluders(
@@ -188,6 +231,7 @@ export function occluders(
   for (const s of solids) {
     if (s.max.y <= floorY) continue;
     if (
+      pointInside(cameraPos, s) ||
       segmentHitsSolid(cameraPos, targets.head, s) !== null ||
       segmentHitsSolid(cameraPos, targets.chest, s) !== null ||
       segmentHitsSolid(cameraPos, targets.feet, s) !== null
@@ -210,6 +254,12 @@ export class FollowCamera {
   private distance = CAMERA_DISTANCE;
   private pitch = DEFAULT_PITCH;
   private focusHeight = FOCUS_HEIGHT;
+  private throughWall = false;
+
+  /** Distanza effettiva tra camera e punto inquadrato (serve a sfumare il modello se è vicinissima). */
+  get currentDistance(): number {
+    return this.distance;
+  }
 
   constructor(private readonly camera: PerspectiveCamera) {}
 
@@ -220,7 +270,7 @@ export class FollowCamera {
 
   update(target: Vec3, solids: readonly Solid[], dt: number, crouching = false): void {
     const step = Math.max(0, dt);
-    // da accovacciati si inquadra più in basso, così il personaggio resta visibile sotto l'architrave
+    // da accovacciati si inquadra più in basso (il punto inquadrato non va sopra l'architrave)
     this.focusHeight +=
       ((crouching ? CROUCH_FOCUS_HEIGHT : FOCUS_HEIGHT) - this.focusHeight) *
       (1 - Math.exp(-10 * step));
@@ -235,14 +285,19 @@ export class FollowCamera {
       this.focus.z += (want.z - this.focus.z) * k;
     }
     const f = this.focus;
-    const pose = desiredPose(f, this.angles.yaw, this.angles.pitch, solids);
+    // con la camera oltre il muro si torna "davanti" solo se c'è un po' più di spazio del minimo
+    const minDistance = this.throughWall ? MIN_DISTANCE + FALLBACK_HYSTERESIS : MIN_DISTANCE;
+    const pose = desiredPose(f, this.angles.yaw, this.angles.pitch, solids, minDistance);
+    this.throughWall = pose.throughWall;
     if (first) {
       this.distance = pose.distance;
       this.pitch = pose.pitch;
     } else {
       this.distance = smoothDistance(this.distance, pose.distance, dt);
-      // alzare la camera è rapido, tornare giù è lento
-      const rate = pose.pitch > this.pitch ? 10 : 3;
+      // allontanarsi dall'inclinazione voluta (per evitare un muro) è rapido, tornarci è lento
+      const wanted = this.angles.pitch;
+      const returning = Math.abs(pose.pitch - wanted) < Math.abs(this.pitch - wanted);
+      const rate = returning ? 3 : 10;
       this.pitch += (pose.pitch - this.pitch) * (1 - Math.exp(-rate * step));
     }
     const d = cameraOffsetDir(this.angles.yaw, this.pitch);

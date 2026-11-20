@@ -3,6 +3,7 @@ import { createSceneContext, showError } from './app/scene-setup';
 import { readUrlOptions } from './app/url-options';
 import {
   FollowCamera,
+  modelOpacity,
   occluders,
   updateCameraAngles,
   type OcclusionTargets,
@@ -18,7 +19,14 @@ import {
   teleport,
   type PlayerInput,
 } from './player/controller';
-import { blinkHidden, createLives, registerFall, registerHit, tickLives } from './player/lives';
+import { blinkHidden, createLives, registerHit, tickLives } from './player/lives';
+import {
+  armInputGate,
+  createInputGate,
+  handleFall,
+  inputBlocked,
+  tickInputGate,
+} from './player/respawn';
 import { profileFor } from './player/profiles';
 import { OcclusionFader } from './render/occlusion-fade';
 import { PlayerView } from './render/player-view';
@@ -102,6 +110,8 @@ async function start(): Promise<void> {
   document.body.dataset.ready = view.kind;
 
   const jumpLatch = new JumpLatch();
+  /** Dopo un rientro i comandi di movimento restano ignorati finché la leva non torna a riposo. */
+  const gate = createInputGate();
   let accumulator = 0;
   /** Tempo di simulazione per la trappola: avanza solo a passi fissi, quindi mai a salti dopo una pausa. */
   let simTime = 0;
@@ -129,12 +139,14 @@ async function start(): Promise<void> {
       // la trappola si muove prima del giocatore: il contatto vale anche a giocatore fermo
       simTime += FIXED_STEP;
       level.setMoverTime(simTime);
+      tickInputGate(gate, Math.hypot(frame.moveX, frame.moveY), FIXED_STEP);
       const defeated = lives.phase === 'sconfitto';
-      stepInput.moveX = defeated ? 0 : frame.moveX;
-      stepInput.moveY = defeated ? 0 : frame.moveY;
-      stepInput.walk = !defeated && frame.walk;
+      const frozen = defeated || inputBlocked(gate);
+      stepInput.moveX = frozen ? 0 : frame.moveX;
+      stepInput.moveY = frozen ? 0 : frame.moveY;
+      stepInput.walk = !frozen && frame.walk;
       stepInput.crouch = !defeated && frame.crouch;
-      stepInput.jump = !defeated && jumpLatch.value();
+      stepInput.jump = !frozen && jumpLatch.value();
       const events = stepPlayer(
         player,
         stepInput,
@@ -153,9 +165,8 @@ async function start(): Promise<void> {
               player,
               knockOrigin(origin, trap, level.motoOf(trap.id), player.position),
             );
-        } else if (registerFall(lives) !== null) {
+        } else if (handleFall(player, lives, level.solids, gate)) {
           // una vita in meno (anche l'ultima: la scritta compare sul punto sicuro)
-          teleport(player, player.safePoint, level.solids);
           followCamera.snap();
         }
       }
@@ -165,6 +176,7 @@ async function start(): Promise<void> {
         simTime = 0;
         teleport(player, level.start, level.solids);
         player.facing = Math.PI;
+        armInputGate(gate);
         followCamera.snap();
       }
     }
@@ -175,6 +187,8 @@ async function start(): Promise<void> {
     level.sync();
     view.update(player, level.solids, dt);
     followCamera.update(player.position, level.solids, dt, player.crouching);
+    // camera vicinissima: il modello sfuma, mai la camera "dentro la testa" con il modello visibile
+    view.setOpacity(modelOpacity(followCamera.currentDistance));
 
     // ostacoli tra camera e personaggio: sfumano
     const pp = player.position;
