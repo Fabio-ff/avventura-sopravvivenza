@@ -20,10 +20,14 @@
   personaggio diventano trasparenti, camera a 4,5 m e 25°. Misure cambiate: recinzione 6 m, muro alto 4 m,
   muro del varco 3,6 m.
 
+- Fase 1, Task 3b e 3c mergiati (PR #10 e #11): Titano elettrico giocabile con il modello Tripo; menu iniziale
+  di scelta del personaggio (senza `?pg=` o con `pg` sconosciuto), pulsante "Personaggi" in gioco.
+
 ## Prossimo passo
-- Fase 1, Task 3b (Titano elettrico giocabile con `?pg=titano`, `fase1/titano`), poi Task 4 (vite, trappola
-  mobile, HUD), poi chiusura di fase.
-- I merge li lancia Fabio o li chiede in modo esplicito: il classificatore blocca `gh pr merge` in autonomia.
+- Fase 1, Task 4 (vite, trappola mobile, HUD, `fase1/vite-hud`), poi chiusura di fase (revisione Opus, tablet).
+- Dal 2026-11-20 Fabio ha autorizzato merge, push e pubblicazione per il lavoro in corso.
+- Da decidere con Fabio: Golem e Titano hanno lo stesso ritratto nel menu (`golem.jpg` e `titan-electro.jpeg`
+  mostrano la stessa figura).
 
 ## Prova sul tablet
 - Fase 0 (2026-11-11): 60 fps con Golden in idle (limite dello schermo; modello del tablet non annotato).
