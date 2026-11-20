@@ -166,6 +166,11 @@ export class PlayerView {
     );
   }
 
+  /** Lampeggio dopo un colpo: nasconde il modello (l'ombra resta); nessun materiale toccato. */
+  setBlinkHidden(hidden: boolean): void {
+    this.body.visible = !hidden;
+  }
+
   update(state: PlayerState, solids: readonly Solid[], dt: number): void {
     const params = viewParamsFor(state.mode);
     const p = state.position;
