@@ -14,7 +14,9 @@ import { createPlayer, stepPlayer, teleport } from './player/controller';
 import { profileFor } from './player/profiles';
 import { OcclusionFader } from './render/occlusion-fade';
 import { PlayerView } from './render/player-view';
+import { showCharacterMenu, showMenuButton } from './ui/character-menu';
 import { FpsCounter } from './ui/debug-overlay';
+import { screenFor } from './ui/menu-logic';
 import { buildLevel, validateLevel, type BuiltLevel } from './world/build-level';
 
 /** Ogni quanti secondi si aggiorna `body[data-pos]` (per lo smoke). */
@@ -34,12 +36,18 @@ async function start(): Promise<void> {
   const app = document.getElementById('app');
   if (!app) throw new Error('#app mancante');
 
+  // Senza un personaggio valido nell'indirizzo: solo il menu, niente scena né modelli.
+  const options = readUrlOptions(window.location.search);
+  if (screenFor(options) === 'menu' || options.pg === null) {
+    showCharacterMenu();
+    return;
+  }
+  const profile = profileFor(options.pg);
+
   const ctx = createSceneContext(app);
   if (!ctx) return;
   const { renderer, scene, camera } = ctx;
-
-  const options = readUrlOptions(window.location.search);
-  const profile = profileFor(options.pg);
+  showMenuButton();
 
   // Per ora esiste un solo livello (`options.level` vale sempre "palestra").
   let level: BuiltLevel;

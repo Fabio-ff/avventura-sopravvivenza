@@ -19,7 +19,9 @@ describe('profili', () => {
   });
 
   it('loadProfiles segnala in italiano un campo mancante', () => {
-    const rotto = [{ id: 'golden', nome: 'G', corsa: 6, colore: null }];
+    const rotto = [
+      { id: 'golden', nome: 'G', descrizione: 'd', ritratto: 'r.jpg', corsa: 6, colore: null },
+    ];
     expect(() => loadProfiles(rotto)).toThrow(/golden.*camminata/);
     expect(() => loadProfiles({})).toThrow(/lista di profili/);
   });

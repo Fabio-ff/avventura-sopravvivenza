@@ -7,6 +7,12 @@ export const GRAVITY = 25;
 export interface AbilityProfile {
   id: string;
   nome: string;
+  /** Una riga sull'abilità, mostrata nel menu di scelta. */
+  descrizione: string;
+  /** Ritratto del menu: percorso sotto `assets/`. */
+  ritratto: string;
+  /** `object-position` CSS per inquadrare il volto nel ritratto (predefinito centro). */
+  inquadratura?: string;
   /** Velocità in m/s. */
   corsa: number;
   camminata: number;
@@ -77,6 +83,12 @@ export function loadProfiles(raw: unknown = rawProfiles): AbilityProfile[] {
       throw new Error(`Profilo #${i}: il campo "id" manca`);
     const ctx = o.id;
     if (typeof o.nome !== 'string') throw new Error(`Profilo ${ctx}: il campo "nome" manca`);
+    const descrizione = o.descrizione;
+    if (typeof descrizione !== 'string' || descrizione === '')
+      throw new Error(`Profilo ${ctx}: il campo "descrizione" manca`);
+    const ritratto = o.ritratto;
+    if (typeof ritratto !== 'string' || ritratto === '')
+      throw new Error(`Profilo ${ctx}: il campo "ritratto" deve essere un percorso di testo`);
     const colore = o.colore;
     if (colore !== null && typeof colore !== 'string')
       throw new Error(`Profilo ${ctx}: il campo "colore" manca (testo o null)`);
@@ -86,6 +98,11 @@ export function loadProfiles(raw: unknown = rawProfiles): AbilityProfile[] {
       if (typeof o.modello !== 'string' || o.modello === '')
         throw new Error(`Profilo ${ctx}: il campo "modello" deve essere un percorso di testo`);
       extra.modello = o.modello;
+    }
+    if (o.inquadratura !== undefined) {
+      if (typeof o.inquadratura !== 'string' || o.inquadratura === '')
+        throw new Error(`Profilo ${ctx}: il campo "inquadratura" deve essere un testo`);
+      extra.inquadratura = o.inquadratura;
     }
     const clip = optionalClipMap(o, ctx);
     if (clip) extra.clip = clip;
@@ -98,6 +115,8 @@ export function loadProfiles(raw: unknown = rawProfiles): AbilityProfile[] {
       ...extra,
       id: o.id,
       nome: o.nome,
+      descrizione,
+      ritratto,
       corsa: num(o, 'corsa', ctx),
       camminata: num(o, 'camminata', ctx),
       accovacciato: num(o, 'accovacciato', ctx),

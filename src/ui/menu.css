@@ -1,0 +1,199 @@
+/* Menu di scelta del personaggio e pulsante "Personaggi" in gioco. */
+.menu {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
+  color: #1d3b2a;
+  background: linear-gradient(#9ad4f5 0%, #c9ecfb 55%, #7cc364 55.1%, #5fa84c 100%) fixed;
+}
+
+.menu-inner {
+  box-sizing: border-box;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+.menu-title {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: clamp(28px, 5vw, 48px);
+  line-height: 1.1;
+  color: #1b5e20;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+
+.menu-subtitle {
+  margin: 6px 0 18px;
+  text-align: center;
+  font-size: clamp(18px, 3vw, 26px);
+  font-weight: 600;
+  color: #134b73;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (min-width: 700px) and (orientation: landscape) {
+  .menu-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.menu-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 120px;
+  min-height: 120px;
+  padding: 8px 8px 12px;
+  box-sizing: border-box;
+  text-decoration: none;
+  color: inherit;
+  background: #fffef6;
+  border: 4px solid #3e9a3c;
+  border-radius: 18px;
+  box-shadow: 0 4px 0 #2b6e2a;
+  touch-action: pan-y;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.menu-card:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #2b6e2a;
+}
+
+.menu-card:focus-visible,
+.menu-back:focus-visible {
+  outline: 5px solid #ff9800;
+  outline-offset: 3px;
+}
+
+.menu-portrait {
+  display: block;
+  height: clamp(120px, 20vh, 200px);
+  overflow: hidden;
+  border-radius: 12px;
+  background: #e3f2d9;
+}
+
+.menu-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.menu-name {
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 800;
+  text-align: center;
+  color: #1b5e20;
+}
+
+.menu-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0 6px;
+}
+
+.menu-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.menu-bars {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.menu-bars i {
+  width: 14px;
+  height: 12px;
+  border-radius: 3px;
+  background: #d5dccf;
+}
+
+.menu-bars i.on {
+  background: #f9a825;
+}
+
+.menu-hearts {
+  color: #e53935;
+  font-size: 18px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.menu-skill {
+  padding: 0 6px;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.25;
+  color: #3d4a3f;
+}
+
+/* Telefono in verticale: le schede sono strette, valori più compatti. */
+@media (max-width: 480px) {
+  .menu-stats {
+    padding: 0 2px;
+  }
+
+  .menu-stat {
+    gap: 4px;
+    font-size: 14px;
+  }
+
+  .menu-bars {
+    gap: 2px;
+  }
+
+  .menu-bars i {
+    width: 9px;
+  }
+
+  .menu-hearts {
+    font-size: 16px;
+    letter-spacing: 0;
+  }
+}
+
+/* Pulsante in gioco: sotto il contatore fps, sopra i comandi touch. */
+.menu-back {
+  position: fixed;
+  top: calc(max(8px, env(safe-area-inset-top)) + 48px);
+  right: max(8px, env(safe-area-inset-right));
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  font:
+    700 18px system-ui,
+    sans-serif;
+  text-decoration: none;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  touch-action: manipulation;
+  -webkit-user-drag: none;
+}

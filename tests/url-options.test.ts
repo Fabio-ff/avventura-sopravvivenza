@@ -8,9 +8,9 @@ describe('readUrlOptions', () => {
   it('?fps=0 li nasconde', () => {
     expect(readUrlOptions('?fps=0').showFps).toBe(false);
   });
-  it('predefiniti: golden in palestra', () => {
+  it('predefiniti: nessun personaggio (menu), livello palestra', () => {
     const o = readUrlOptions('');
-    expect(o.pg).toBe('golden');
+    expect(o.pg).toBeNull();
     expect(o.level).toBe('palestra');
   });
   it('?pg= accetta i personaggi noti', () => {
@@ -18,11 +18,11 @@ describe('readUrlOptions', () => {
     expect(readUrlOptions('?pg=vichinga').pg).toBe('vichinga');
     expect(readUrlOptions('?pg=titano').pg).toBe('titano');
   });
-  it('valori sconosciuti tornano al predefinito, senza errori', () => {
+  it('pg sconosciuto vale null (menu), level sconosciuto vale palestra, senza errori', () => {
     const o = readUrlOptions('?pg=drago&level=giungla');
-    expect(o.pg).toBe('golden');
+    expect(o.pg).toBeNull();
     expect(o.level).toBe('palestra');
-    expect(readUrlOptions('?pg=&level=').pg).toBe('golden');
-    expect(readUrlOptions('?pg=NINJA').pg).toBe('golden');
+    expect(readUrlOptions('?pg=&level=').pg).toBeNull();
+    expect(readUrlOptions('?pg=NINJA').pg).toBeNull();
   });
 });

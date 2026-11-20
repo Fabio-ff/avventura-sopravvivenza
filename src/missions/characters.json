@@ -2,6 +2,9 @@
   {
     "id": "golden",
     "nome": "Golden",
+    "descrizione": "Esploratrice equilibrata",
+    "ritratto": "art/ritratti/golden.jpg",
+    "inquadratura": "50% 12%",
     "corsa": 6,
     "camminata": 2.5,
     "accovacciato": 2,
@@ -15,6 +18,9 @@
   {
     "id": "ninja",
     "nome": "Ninja",
+    "descrizione": "Corre veloce e salta altissimo",
+    "ritratto": "art/ritratti/ninja.jpg",
+    "inquadratura": "50% 0%",
     "corsa": 7,
     "camminata": 2.5,
     "accovacciato": 2,
@@ -28,6 +34,9 @@
   {
     "id": "golem",
     "nome": "Golem",
+    "descrizione": "Spinge i massi",
+    "ritratto": "art/ritratti/golem.jpg",
+    "inquadratura": "50% 28%",
     "corsa": 5,
     "camminata": 2.5,
     "accovacciato": 2,
@@ -41,6 +50,9 @@
   {
     "id": "mago",
     "nome": "Mago",
+    "descrizione": "Rivela le cose nascoste",
+    "ritratto": "art/ritratti/mago.jpg",
+    "inquadratura": "50% 4%",
     "corsa": 6,
     "camminata": 2.5,
     "accovacciato": 2,
@@ -54,6 +66,9 @@
   {
     "id": "vichinga",
     "nome": "Vichinga",
+    "descrizione": "Spacca gli ostacoli",
+    "ritratto": "art/ritratti/vichinga.jpg",
+    "inquadratura": "50% 8%",
     "corsa": 6,
     "camminata": 2.5,
     "accovacciato": 2,
@@ -67,6 +82,9 @@
   {
     "id": "titano",
     "nome": "Titano elettrico",
+    "descrizione": "Accende i meccanismi",
+    "ritratto": "art/ritratti/titano.jpg",
+    "inquadratura": "50% 28%",
     "corsa": 5.5,
     "camminata": 2.5,
     "accovacciato": 2,
