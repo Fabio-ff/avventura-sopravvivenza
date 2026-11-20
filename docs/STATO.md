@@ -1,6 +1,6 @@
 # Stato del progetto
 
-**Fase corrente:** 1 — Muoversi, in corso
+**Fase corrente:** 1 — Muoversi, codice completo; mancano la prova sul tablet e il momento per Filippo
 (piano: `docs/superpowers/plans/2026-11-11-fase-1-muoversi.md`, epic: issue #6).
 
 **Indirizzo pubblico:** https://fabio-ff.github.io/avventura-sopravvivenza/
@@ -23,11 +23,19 @@
 - Fase 1, Task 3b e 3c mergiati (PR #10 e #11): Titano elettrico giocabile con il modello Tripo; menu iniziale
   di scelta del personaggio (senza `?pg=` o con `pg` sconosciuto), pulsante "Personaggi" in gioco.
 
+- Fase 1, Task 4 mergiato (PR #12): vite, cuori, trappola mobile, "Riprova!".
+- Revisione Opus di fine fase 1: due bloccanti (camera dentro il personaggio sotto l'architrave e spalle al muro;
+  vite perse a raffica rientrando dal fossato) e alcuni minori, corretti in PR #13. Spalle al muro la camera resta
+  a 4,5 m oltre il muro, che diventa trasparente. 201 test.
+
 ## Prossimo passo
-- Fase 1, Task 4 (vite, trappola mobile, HUD, `fase1/vite-hud`), poi chiusura di fase (revisione Opus, tablet).
-- Dal 2026-11-20 Fabio ha autorizzato merge, push e pubblicazione per il lavoro in corso.
-- Da decidere con Fabio: Golem e Titano hanno lo stesso ritratto nel menu (`golem.jpg` e `titan-electro.jpeg`
-  mostrano la stessa figura).
+- Prova sul tablet della palestra (touch, fps da annotare qui sotto) e momento per Filippo: prova i sei
+  personaggi dal menu e decide salti e velocità (`src/missions/characters.json`).
+- Poi piano della fase 2.
+- Da decidere con Fabio: Golem e Titano hanno lo stesso ritratto nel menu; il masso della palestra si aggira
+  (varchi da 3 m, masso da 1 m): farne un vero cancello?
+- Mai provati a mano: touch e multitouch su tablet vero, passaggio sotto l'architrave a schermo, animazione
+  "colpito" del Titano, idle del Titano (posa di camminata ferma: servirebbero clip idle e run da Tripo).
 
 ## Prova sul tablet
 - Fase 0 (2026-11-11): 60 fps con Golden in idle (limite dello schermo; modello del tablet non annotato).

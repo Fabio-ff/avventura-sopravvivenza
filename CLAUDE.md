@@ -14,8 +14,13 @@ Specifica: `docs/superpowers/specs/`. Piani: `docs/superpowers/plans/`. Stato: `
 
 - `src/main.ts` — avvio, scena
 - `src/app/` — ciclo di gioco, tempo, utilità
-- `src/render/` — modelli, personaggi, camera
-- `src/ui/` — CSS e interfaccia
+- `src/render/` — modelli, personaggi, vista del giocatore, sfumatura degli ostacoli
+- `src/camera/` — camera che segue (parte pura testata)
+- `src/input/` — tastiera, gamepad, touch
+- `src/player/` — controller, profili, vite, rientro dalla caduta (logica pura)
+- `src/world/` — scatole, collisioni, livello, trappole mobili
+- `src/missions/` — `characters.json` e livelli (`palestra/level.json`)
+- `src/hud/`, `src/ui/` — cuori e scritte in gioco; menu dei personaggi, CSS
 - `tests/` — test Vitest
 - `public/assets/` — modelli e immagini (percorsi via `import.meta.env.BASE_URL`)
 - `sources/` — materiale di partenza, non spedito
