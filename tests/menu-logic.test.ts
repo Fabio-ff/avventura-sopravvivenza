@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { readUrlOptions } from '../src/app/url-options';
 import { loadProfiles } from '../src/player/profiles';
-import { cardsFromProfiles, screenFor, urlWithPg } from '../src/ui/menu-logic';
+import {
+  BACK_CONFIRM_LABEL,
+  BACK_CONFIRM_MS,
+  BACK_LABEL,
+  backLabel,
+  cardsFromProfiles,
+  pressBack,
+  screenFor,
+  urlWithPg,
+} from '../src/ui/menu-logic';
 
 describe('schede del menu', () => {
   const cards = cardsFromProfiles(loadProfiles());
@@ -82,5 +91,23 @@ describe('screenFor', () => {
   it('con pg valido: gioco', () => {
     expect(screenFor(readUrlOptions('?pg=golden'))).toBe('game');
     expect(screenFor(readUrlOptions('?pg=titano&fps=0'))).toBe('game');
+  });
+});
+
+describe('pulsante Personaggi con conferma', () => {
+  it('il primo tocco arma, il secondo entro 3 s naviga, dopo 3 s riarma', () => {
+    const first = pressBack(null, 1000);
+    expect(first).toEqual({ action: 'conferma', armedAt: 1000 });
+    expect(pressBack(first.armedAt, 1000 + BACK_CONFIRM_MS)).toEqual({
+      action: 'naviga',
+      armedAt: null,
+    });
+    expect(pressBack(first.armedAt, 1000 + BACK_CONFIRM_MS + 1)).toEqual({
+      action: 'conferma',
+      armedAt: 1000 + BACK_CONFIRM_MS + 1,
+    });
+    expect(backLabel(null, 0)).toBe(BACK_LABEL);
+    expect(backLabel(1000, 2000)).toBe(BACK_CONFIRM_LABEL);
+    expect(backLabel(1000, 1000 + BACK_CONFIRM_MS + 1)).toBe(BACK_LABEL);
   });
 });

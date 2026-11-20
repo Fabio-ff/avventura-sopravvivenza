@@ -1,6 +1,14 @@
 // Menu a tutto schermo per scegliere il personaggio (DOM + CSS, senza three).
 import { loadProfiles } from '../player/profiles';
-import { BARS_MAX, cardsFromProfiles, urlWithPg, type CharacterCard } from './menu-logic';
+import {
+  BACK_CONFIRM_MS,
+  BARS_MAX,
+  backLabel,
+  cardsFromProfiles,
+  pressBack,
+  urlWithPg,
+  type CharacterCard,
+} from './menu-logic';
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -79,10 +87,28 @@ export function showCharacterMenu(): void {
   document.body.dataset.menu = String(grid.childElementCount);
 }
 
-/** Piccolo pulsante in gioco che riporta al menu (indirizzo senza `pg`). */
+/**
+ * Piccolo pulsante in gioco che riporta al menu (indirizzo senza `pg`). Per non perdere la partita
+ * con un tocco per sbaglio serve un secondo tocco entro 3 secondi ("Torna al menu?").
+ */
 export function showMenuButton(): void {
-  const a = el('a', 'menu-back', 'Personaggi');
+  const a = el('a', 'menu-back', backLabel(null, 0));
   a.href = urlWithPg(window.location.href, null);
   a.draggable = false;
+  let armedAt: number | null = null;
+  let timer: number | undefined;
+  a.addEventListener('click', (event) => {
+    const now = performance.now();
+    const press = pressBack(armedAt, now);
+    armedAt = press.armedAt;
+    if (press.action === 'naviga') return; // il collegamento porta al menu
+    event.preventDefault();
+    a.textContent = backLabel(armedAt, now);
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      armedAt = null;
+      a.textContent = backLabel(null, performance.now());
+    }, BACK_CONFIRM_MS);
+  });
   document.body.append(a);
 }

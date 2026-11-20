@@ -18,8 +18,11 @@ const WALK_THRESHOLD = 0.5;
 const KNOCK_TIME = 0.35;
 const KNOCK_SPEED = 5;
 const KNOCK_HOP = 4;
-/** Distanza minima dal bordo di una lastra perché valga come punto sicuro. */
-const SAFE_MARGIN = 0.8;
+/**
+ * Distanza minima dal bordo di una lastra perché valga come punto sicuro: abbastanza da non
+ * ricadere subito nel vuoto. Su lastre strette (passerelle) si ferma a due quinti della lato più corto.
+ */
+export const SAFE_MARGIN = 1.5;
 
 export type GroundHook = (x: number, z: number) => number | null;
 
@@ -268,11 +271,12 @@ function updateSafePoint(state: PlayerState, solids: readonly Solid[]): void {
   }
   for (const s of solids) {
     if (s.kind !== 'fisso' || Math.abs(s.max.y - p.y) > 0.01) continue;
+    const margin = Math.min(SAFE_MARGIN, 0.4 * Math.min(s.max.x - s.min.x, s.max.z - s.min.z));
     if (
-      p.x >= s.min.x + SAFE_MARGIN &&
-      p.x <= s.max.x - SAFE_MARGIN &&
-      p.z >= s.min.z + SAFE_MARGIN &&
-      p.z <= s.max.z - SAFE_MARGIN
+      p.x >= s.min.x + margin &&
+      p.x <= s.max.x - margin &&
+      p.z >= s.min.z + margin &&
+      p.z <= s.max.z - margin
     ) {
       state.safePoint = { ...p };
       return;

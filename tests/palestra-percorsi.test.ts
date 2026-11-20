@@ -153,6 +153,35 @@ describe('percorsi sulla palestra vera', () => {
     expect(wall.outside).toBe(false);
   });
 
+  it('titano supera il fossato stretto, ma non quello largo né il muro da 1,6 m', () => {
+    const narrow = run('titano', level.partenza, [
+      { x: 0, z: -7.6, reach: 0.2 },
+      { x: 0, z: -12, jumpWhen: (p) => p.z < -7.2 && p.z > -9 },
+    ]);
+    expect(narrow.events).toEqual([]);
+    expect(narrow.state.position.z).toBeLessThan(-11);
+
+    // il fossato largo (5,5 m): cade nel vuoto, quindi non arriva dall'altra parte
+    const wide = run('titano', { x: 0, y: 0, z: -12 }, [
+      { x: 0, z: -19.6, reach: 0.2 },
+      { x: 0, z: -28, jumpWhen: (p) => p.z < -19.6 && p.z > -22 },
+    ]);
+    expect(wide.events.some((e) => e.type === 'caduto')).toBe(true);
+
+    const wall = run(
+      'titano',
+      { x: 0, y: 0, z: -37 },
+      [
+        { x: 0, z: -40.2, reach: 0.2 },
+        { x: 0, z: -44, jumpWhen: (p) => p.z < -40.2 && p.z > -41.2 },
+      ],
+      toSolids(level),
+      true,
+    );
+    expect(wall.maxY).toBeLessThan(1.6);
+    expect(wall.state.position.z).toBeGreaterThan(-42);
+  });
+
   it('ninja che salta dal muro da 1,6 m verso la recinzione non esce', () => {
     const tentativi: [Vec3, number, number][] = [
       [{ x: -5, y: 1.6, z: -41.5 }, -30, -41.5], // ovest

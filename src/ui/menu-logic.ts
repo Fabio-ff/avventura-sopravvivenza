@@ -62,3 +62,26 @@ export function urlWithPg(href: string, pg: string | null): string {
 export function screenFor(options: Pick<UrlOptions, 'pg'>): 'menu' | 'game' {
   return options.pg === null ? 'menu' : 'game';
 }
+
+/** Quanto resta attiva la conferma del pulsante "Personaggi", in millisecondi. */
+export const BACK_CONFIRM_MS = 3000;
+export const BACK_LABEL = 'Personaggi';
+export const BACK_CONFIRM_LABEL = 'Torna al menu?';
+
+/**
+ * Un tocco sul pulsante "Personaggi". `armedAt` è l'istante del primo tocco (null = non armato).
+ * Il primo tocco arma la conferma; un secondo entro `BACK_CONFIRM_MS` naviga; più tardi riarma.
+ */
+export function pressBack(
+  armedAt: number | null,
+  now: number,
+): { action: 'conferma' | 'naviga'; armedAt: number | null } {
+  if (armedAt !== null && now - armedAt <= BACK_CONFIRM_MS)
+    return { action: 'naviga', armedAt: null };
+  return { action: 'conferma', armedAt: now };
+}
+
+/** Etichetta del pulsante: quella di conferma solo mentre è armato e il tempo non è scaduto. */
+export function backLabel(armedAt: number | null, now: number): string {
+  return armedAt !== null && now - armedAt <= BACK_CONFIRM_MS ? BACK_CONFIRM_LABEL : BACK_LABEL;
+}

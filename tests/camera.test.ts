@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   CAMERA_DISTANCE,
+  CLOSE_DISTANCE,
+  CROUCH_FOCUS_HEIGHT,
+  modelOpacity,
   MAX_PITCH,
   MIN_PITCH,
   REALIGN_DELAY,
@@ -16,6 +19,8 @@ import {
 import { bodyOverlaps } from '../src/world/collide';
 import { cameraOffsetDir } from '../src/camera/follow-camera';
 import { box } from '../src/world/solids';
+import levelJson from '../src/missions/palestra/level.json';
+import { toSolids, validateLevel } from '../src/world/build-level';
 
 describe('angoli della camera', () => {
   it('trascinare a destra gira la visuale a destra (yaw cala), in alto alza lo sguardo', () => {
@@ -180,8 +185,63 @@ describe('distanza della camera', () => {
           height: 0.1,
         };
         expect(bodyOverlaps(probe, solids)).toBe(false);
+        // se la camera è vicinissima il modello deve sparire (mai la camera nella testa con il modello visibile)
+        if (pose.distance < CLOSE_DISTANCE) expect(modelOpacity(pose.distance)).toBeLessThan(1);
+        else expect(modelOpacity(pose.distance)).toBe(1);
       }
     }
+  });
+
+  it('con il muro a 0,5 m alle spalle la distanza è la migliore trovata e il modello sfuma', () => {
+    const muro = box(1, 'fisso', { x: -10, y: 0, z: 0.5 }, { x: 10, y: 4, z: 1.5 });
+    const pose = desiredPose(focus, 0, DEFAULT_PITCH, [muro]);
+    // nessuna inclinazione fa meglio: la distanza è comunque la massima tra quelle provate
+    for (let p = MIN_PITCH; p <= MAX_PITCH + 1e-9; p += (5 * Math.PI) / 180)
+      expect(desiredDistance(focus, 0, p, [muro])).toBeLessThanOrEqual(pose.distance + 1e-9);
+    expect(modelOpacity(pose.distance)).toBeLessThan(1);
+  });
+
+  it('inclinazioni più basse quando quelle più alte non bastano', () => {
+    // tettoia a 1,0 m sopra il punto inquadrato, estesa dietro: salire non serve, scendere sì
+    const tettoia = box(1, 'fisso', { x: -5, y: 1.4, z: 0 }, { x: 5, y: 3, z: 6 });
+    const alta = desiredDistance(focus, 0, DEFAULT_PITCH, [tettoia]);
+    expect(alta).toBeLessThan(MIN_DISTANCE);
+    const pose = desiredPose(focus, 0, DEFAULT_PITCH, [tettoia]);
+    expect(pose.pitch).toBeLessThan(DEFAULT_PITCH);
+    expect(pose.distance).toBeGreaterThanOrEqual(MIN_DISTANCE);
+  });
+
+  it("sceglie l'inclinazione più vicina a quella voluta, non la prima trovata", () => {
+    const tettoia = box(1, 'fisso', { x: -5, y: 1.4, z: 0 }, { x: 5, y: 3, z: 6 });
+    const pose = desiredPose(focus, 0, DEFAULT_PITCH, [tettoia]);
+    const step = (5 * Math.PI) / 180;
+    const piuVicina = desiredPose(focus, 0, pose.pitch + step, [tettoia]);
+    // un passo più su dell'inclinazione scelta non è valido, uno più giù non è più vicino
+    expect(desiredDistance(focus, 0, pose.pitch + step, [tettoia])).toBeLessThan(MIN_DISTANCE);
+    expect(piuVicina.pitch).toBeLessThanOrEqual(pose.pitch + 1e-9);
+  });
+
+  it("Golden accovacciato sotto l'architrave vero: la camera non scende mai sotto la distanza minima", () => {
+    const solids = toSolids(validateLevel(levelJson));
+    const f = { x: 0, y: CROUCH_FOCUS_HEIGHT, z: 0 };
+    for (let z = -49; z >= -55; z -= 0.1) {
+      f.z = z;
+      for (const yaw of [0, 0.3, -0.3]) {
+        const pose = desiredPose(f, yaw, DEFAULT_PITCH, solids);
+        expect(pose.distance).toBeGreaterThanOrEqual(MIN_DISTANCE);
+      }
+    }
+  });
+
+  it('opacità del modello: piena da 0,7 m, zero molto vicino, continua in mezzo', () => {
+    expect(modelOpacity(CAMERA_DISTANCE)).toBe(1);
+    expect(modelOpacity(CLOSE_DISTANCE)).toBe(1);
+    expect(modelOpacity(0.15)).toBe(0);
+    expect(modelOpacity(0)).toBe(0);
+    const m = modelOpacity(0.5);
+    expect(m).toBeGreaterThan(0);
+    expect(m).toBeLessThan(1);
+    expect(modelOpacity(0.6)).toBeGreaterThan(m);
   });
 
   it('si accorcia subito e si allunga piano', () => {

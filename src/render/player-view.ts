@@ -22,9 +22,13 @@ const PLACEHOLDER_COLOR = 0xf2c14e;
 const HOVER_AMPLITUDE = 0.06;
 const HOVER_PERIOD = 2;
 
+/** Fluttuazione da accovacciati: fissa e bassa, così la testa non entra nell'architrave a 1,2 m. */
+export const CROUCH_HOVER = 0.05;
+
 /** Altezza visiva del modello sopra il suolo al tempo `t` (0 se non fluttua). */
-export function hoverOffset(fluttua: number | undefined, t: number): number {
+export function hoverOffset(fluttua: number | undefined, t: number, crouching = false): number {
   if (!fluttua) return 0;
+  if (crouching) return Math.min(fluttua, CROUCH_HOVER);
   return fluttua + HOVER_AMPLITUDE * Math.sin((2 * Math.PI * t) / HOVER_PERIOD);
 }
 
@@ -80,13 +84,16 @@ function normalize(root: THREE.Object3D): void {
   root.position.y -= fitted.min.y;
 }
 
-/** Clona i materiali delle mesh e li tinge (il colore si moltiplica alla texture). */
-function tint(root: THREE.Object3D, color: string): void {
+/**
+ * Clona i materiali delle mesh (così la sfumatura vicino alla camera non tocca la cache dei modelli)
+ * e, se serve, li tinge (il colore si moltiplica alla texture).
+ */
+function prepareMaterials(root: THREE.Object3D, color?: string): void {
   root.traverse((o) => {
     if (!(o instanceof THREE.Mesh)) return;
     const tintOne = (m: THREE.Material): THREE.Material => {
       const c = m.clone();
-      if ('color' in c && c.color instanceof THREE.Color) c.color.set(color);
+      if (color && 'color' in c && c.color instanceof THREE.Color) c.color.set(color);
       return c;
     };
     o.material = Array.isArray(o.material) ? o.material.map(tintOne) : tintOne(o.material);
@@ -125,6 +132,13 @@ export class PlayerView {
   private heading: number | null = null;
   private squash = 1;
   private time = 0;
+  private blinkHidden = false;
+  private opacity = 1;
+  private readonly baseMaterials: {
+    material: THREE.Material;
+    transparent: boolean;
+    opacity: number;
+  }[];
 
   private constructor(
     private readonly character: CharacterView | null,
@@ -136,6 +150,16 @@ export class PlayerView {
   ) {
     this.body.add(model);
     this.group.add(this.body, this.shadow);
+    const seen = new Set<THREE.Material>();
+    model.traverse((o) => {
+      if (!(o instanceof THREE.Mesh)) return;
+      for (const m of Array.isArray(o.material) ? o.material : [o.material]) seen.add(m);
+    });
+    this.baseMaterials = [...seen].map((material) => ({
+      material,
+      transparent: material.transparent,
+      opacity: material.opacity,
+    }));
   }
 
   /** Carica il modello del profilo (Golden se non ne ha uno), tinto se serve; se manca resta la capsula. */
@@ -147,7 +171,7 @@ export class PlayerView {
       if (loaded) {
         const model = instantiate(loaded);
         normalize(model.scene);
-        if (profile.colore) tint(model.scene, profile.colore);
+        prepareMaterials(model.scene, profile.colore ?? undefined);
         return new PlayerView(
           new CharacterView(model, profile.clip),
           model.scene,
@@ -168,7 +192,23 @@ export class PlayerView {
 
   /** Lampeggio dopo un colpo: nasconde il modello (l'ombra resta); nessun materiale toccato. */
   setBlinkHidden(hidden: boolean): void {
-    this.body.visible = !hidden;
+    this.blinkHidden = hidden;
+    this.body.visible = !hidden && this.opacity > 0;
+  }
+
+  /** Sfuma il modello (1 = pieno, 0 = invisibile) quando la camera è vicinissima; l'ombra resta. */
+  setOpacity(opacity: number): void {
+    if (opacity === this.opacity) return;
+    this.opacity = opacity;
+    this.body.visible = !this.blinkHidden && opacity > 0;
+    for (const base of this.baseMaterials) {
+      const transparent = base.transparent || opacity < 1;
+      if (base.material.transparent !== transparent) {
+        base.material.transparent = transparent;
+        base.material.needsUpdate = true;
+      }
+      base.material.opacity = base.opacity * opacity;
+    }
   }
 
   update(state: PlayerState, solids: readonly Solid[], dt: number): void {
@@ -184,7 +224,7 @@ export class PlayerView {
     this.squash += (params.squash - this.squash) * (1 - Math.exp(-SQUASH_RATE * dt));
     this.body.scale.y = this.squash;
     this.time += dt;
-    this.body.position.y = hoverOffset(this.fluttua, this.time);
+    this.body.position.y = hoverOffset(this.fluttua, this.time, state.crouching);
 
     if (this.character) {
       this.character.mixer.timeScale = params.timeScale;
