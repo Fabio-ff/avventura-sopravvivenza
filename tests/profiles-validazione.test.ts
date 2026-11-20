@@ -20,6 +20,28 @@ describe('validazione profili', () => {
   });
 });
 
+describe('validazione dei campi del menu', () => {
+  const base = () => JSON.parse(JSON.stringify(loadProfiles())) as Record<string, unknown>[];
+
+  it('descrizione e ritratto obbligatori', () => {
+    const a = base();
+    delete a[0].descrizione;
+    expect(() => loadProfiles(a)).toThrow(/golden.*descrizione/);
+    const b = base();
+    b[0].ritratto = '';
+    expect(() => loadProfiles(b)).toThrow(/golden.*ritratto/);
+  });
+
+  it("inquadratura facoltativa ma, se c'è, deve essere testo", () => {
+    const a = base();
+    a[0].inquadratura = 5;
+    expect(() => loadProfiles(a)).toThrow(/inquadratura/);
+    const b = base();
+    delete b[0].inquadratura;
+    expect(loadProfiles(b)[0].inquadratura).toBeUndefined();
+  });
+});
+
 describe('validazione dei campi del modello', () => {
   const base = () => JSON.parse(JSON.stringify(loadProfiles())) as Record<string, unknown>[];
 

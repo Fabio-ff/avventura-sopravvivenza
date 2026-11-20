@@ -49,11 +49,7 @@ di 1/60 s. Nessun motore di fisica: cilindro verticale contro scatole allineate 
 - **Camera.** Segue da dietro a 4,5 m con inclinazione 25°, si riallinea da sola dopo 1,5 s senza comandi di camera mentre ci
   si muove, si accorcia se una scatola sta tra lei e il personaggio (cinque raggi), ostacoli che coprono diventano
   trasparenti, inclinazione limitata tra −10° e 60°.
-<<<<<<< HEAD
-- **URL.** `?pg=golden|ninja|golem|mago|vichinga|titano` (predefinito golden), `?level=palestra` (unico livello, predefinito).
-=======
-- **URL.** `?pg=golden|ninja|golem|mago|vichinga` (predefinito golden), `?level=palestra` (unico livello, predefinito).
->>>>>>> origin/main
+- **URL.** `?pg=golden|ninja|golem|mago|vichinga|titano`, `?level=palestra` (unico livello, predefinito). Senza `pg`, o con `pg` sconosciuto, si apre il menu di scelta del personaggio (schede a tutto schermo, tocco/mouse/tastiera); in gioco il pulsante "Personaggi" riporta al menu.
 
 ## Vincoli globali
 
@@ -67,7 +63,7 @@ di 1/60 s. Nessun motore di fisica: cilindro verticale contro scatole allineate 
 1. Attraversamento: un frame lungo o una caduta veloce non devono far passare il cilindro attraverso lastre sottili.
 2. Incastri: negli angoli, tra masso e muro, sul bordo dei fossati; il masso non entra nei muri né schiaccia il giocatore.
 3. Touch: joystick, trascinamento camera e Salta insieme con tre dita; un `pointercancel` non lascia il joystick premuto.
-4. `?pg=` o `?level=` sconosciuti: si gioca con Golden in palestra, nessun errore.
+4. `?pg=` sconosciuto o assente: si apre il menu di scelta; `?level=` sconosciuto: palestra. Nessun errore.
 5. Scheda in background o finestra che perde il fuoco: nessun tasto resta premuto, nessuna vita persa al ritorno.
 
 Ogni punto ha il suo test nel task che possiede il codice (1–2 nel Task 1, 3 e 5 nel Task 2, 4 nel Task 3).
@@ -150,4 +146,4 @@ golem con 4) e sul moto della trappola; in gioco la trappola toglie un cuore, il
 ## Rimandato di proposito
 
 Interagisci, raccoglibili, trigger, loader con schema → fase 2. Elementi per `canReveal` e `canSmash` → fasi 2 e 6.
-Selezione personaggio a schermo → fase 6. Suoni → fase 7. Terreno a heightmap → fase 3.
+Selezione personaggio a schermo: la versione semplice (menu di schede) è anticipata alla fase 1; resta alla fase 6 solo un'eventuale versione rifinita. Suoni → fase 7. Terreno a heightmap → fase 3.

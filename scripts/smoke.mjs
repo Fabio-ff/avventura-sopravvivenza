@@ -1,4 +1,4 @@
-// Smoke test: Chromium headless sull'app costruita. La pagina si carica, esiste un canvas, nessun errore in console.
+// Smoke test: Chromium headless sull'app costruita. Menu di scelta, poi pagina di gioco con canvas, nessun errore in console.
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 
@@ -44,7 +44,36 @@ async function run() {
   });
   page.on('pageerror', (e) => errors.push(String(e)));
 
+  // Senza ?pg= compare il menu con sei schede; il gioco 3D non parte (nessun canvas).
   await page.goto(BASE);
+  await page.waitForSelector('.menu-card');
+  const schede = await page.locator('.menu-card').count();
+  if (schede !== 6) throw new Error(`menu: ${schede} schede, attese 6`);
+  if ((await page.locator('canvas').count()) !== 0)
+    throw new Error('menu: canvas di gioco avviato');
+  if (await page.evaluate(() => 'ready' in document.body.dataset))
+    throw new Error('menu: il gioco risulta avviato');
+  // Un ?pg= sconosciuto riporta al menu, e gli altri parametri restano nei link.
+  await page.goto(`${BASE}?pg=drago&fps=0`);
+  await page.waitForSelector('.menu-card');
+  const href = await page.locator('.menu-card[data-pg="ninja"]').getAttribute('href');
+  if (!href?.includes('fps=0') || !href.includes('pg=ninja'))
+    throw new Error(`menu: link del Ninja inatteso (${href})`);
+
+  // Clic sulla scheda del Ninja: arriva a ?pg=ninja e il gioco si carica.
+  await page.goto(BASE);
+  await page.click('.menu-card[data-pg="ninja"]');
+  await page.waitForURL(/[?&]pg=ninja/);
+  await page.waitForSelector('canvas');
+  await page.waitForSelector('body[data-ready]', { timeout: 30_000 });
+
+  // In gioco il pulsante "Personaggi" riporta al menu (indirizzo senza pg).
+  await page.click('.menu-back');
+  await page.waitForSelector('.menu-card');
+  if (new URL(page.url()).searchParams.has('pg'))
+    throw new Error(`pulsante: pg ancora in ${page.url()}`);
+
+  await page.goto(`${BASE}?pg=golden`);
   await page.waitForSelector('canvas');
 
   // Il modello è caricato (golden) o è comparso il segnaposto; con SMOKE_EXPECT si pretende l'uno o l'altro.
