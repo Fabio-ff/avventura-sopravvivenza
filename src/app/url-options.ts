@@ -1,5 +1,5 @@
 /** Personaggi giocabili (ids di characters.json). */
-export const PG_IDS = ['golden', 'ninja', 'golem', 'mago', 'vichinga'] as const;
+export const PG_IDS = ['golden', 'ninja', 'golem', 'mago', 'vichinga', 'titano'] as const;
 /** Livelli disponibili. */
 export const LEVEL_IDS = ['palestra'] as const;
 

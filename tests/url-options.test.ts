@@ -16,6 +16,7 @@ describe('readUrlOptions', () => {
   it('?pg= accetta i personaggi noti', () => {
     expect(readUrlOptions('?pg=ninja').pg).toBe('ninja');
     expect(readUrlOptions('?pg=vichinga').pg).toBe('vichinga');
+    expect(readUrlOptions('?pg=titano').pg).toBe('titano');
   });
   it('valori sconosciuti tornano al predefinito, senza errori', () => {
     const o = readUrlOptions('?pg=drago&level=giungla');

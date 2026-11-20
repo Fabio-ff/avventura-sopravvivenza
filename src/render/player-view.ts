@@ -18,6 +18,15 @@ const MODEL_HEIGHT = STAND_HEIGHT;
 const TURN_RATE = 14;
 const SQUASH_RATE = 18;
 const PLACEHOLDER_COLOR = 0xf2c14e;
+/** Oscillazione verticale di chi fluttua: ampiezza in metri e periodo in secondi. */
+const HOVER_AMPLITUDE = 0.06;
+const HOVER_PERIOD = 2;
+
+/** Altezza visiva del modello sopra il suolo al tempo `t` (0 se non fluttua). */
+export function hoverOffset(fluttua: number | undefined, t: number): number {
+  if (!fluttua) return 0;
+  return fluttua + HOVER_AMPLITUDE * Math.sin((2 * Math.PI * t) / HOVER_PERIOD);
+}
 
 export interface ViewParams {
   state: CharacterState;
@@ -115,33 +124,44 @@ export class PlayerView {
   private readonly shadow = createBlobShadow();
   private heading: number | null = null;
   private squash = 1;
+  private time = 0;
 
   private constructor(
     private readonly character: CharacterView | null,
     model: THREE.Object3D,
-    /** 'golden' se il modello è caricato, altrimenti 'segnaposto'. */
-    readonly kind: 'golden' | 'segnaposto',
+    /** Altezza di fluttuazione in metri (0 = piedi a terra). */
+    private readonly fluttua: number,
+    /** Id del personaggio se il modello è caricato ('golden' per i segnaposto tinti), altrimenti 'segnaposto'. */
+    readonly kind: string,
   ) {
     this.body.add(model);
     this.group.add(this.body, this.shadow);
   }
 
-  /** Carica il modello di Golden tinto col colore del profilo; se manca resta la capsula tinta. */
+  /** Carica il modello del profilo (Golden se non ne ha uno), tinto se serve; se manca resta la capsula. */
   static async create(profile: AbilityProfile): Promise<PlayerView> {
+    let file = 'characters/golden.glb';
     try {
-      const loaded = await loadCharacterModel('characters/golden.glb');
+      file = profile.modello ?? 'characters/golden.glb';
+      const loaded = await loadCharacterModel(file);
       if (loaded) {
         const model = instantiate(loaded);
         normalize(model.scene);
         if (profile.colore) tint(model.scene, profile.colore);
-        return new PlayerView(new CharacterView(model), model.scene, 'golden');
+        return new PlayerView(
+          new CharacterView(model, profile.clip),
+          model.scene,
+          profile.fluttua ?? 0,
+          profile.modello ? profile.id : 'golden',
+        );
       }
     } catch (error) {
-      console.warn('[model] segnaposto per characters/golden.glb', error);
+      console.warn('[model] segnaposto per', file, error);
     }
     return new PlayerView(
       null,
       createPlaceholder(profile.colore ?? PLACEHOLDER_COLOR),
+      0,
       'segnaposto',
     );
   }
@@ -158,6 +178,8 @@ export class PlayerView {
     this.body.rotation.y = this.heading;
     this.squash += (params.squash - this.squash) * (1 - Math.exp(-SQUASH_RATE * dt));
     this.body.scale.y = this.squash;
+    this.time += dt;
+    this.body.position.y = hoverOffset(this.fluttua, this.time);
 
     if (this.character) {
       this.character.mixer.timeScale = params.timeScale;

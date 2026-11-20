@@ -21,3 +21,15 @@ export function resolveClip(
   if (available.has(wanted)) return wanted;
   return available.has('idle') ? 'idle' : null;
 }
+
+/** Clip di un modello per una clip logica: nome nel file e fattore di velocità (0 = ferma sulla posa). */
+export interface ClipSpec {
+  nome: string;
+  velocita: number;
+}
+export type ClipMap = Partial<Record<CanonicalClip, ClipSpec>>;
+
+/** Nome della clip nel file e velocità per una clip logica; senza mappa vale il nome omonimo a velocità 1. */
+export function clipSpecFor(map: ClipMap | undefined, logical: CanonicalClip): ClipSpec {
+  return map?.[logical] ?? { nome: logical, velocita: 1 };
+}

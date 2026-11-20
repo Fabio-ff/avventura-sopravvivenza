@@ -1,5 +1,6 @@
 // Profili dei personaggi giocabili (valori in src/missions/characters.json).
 import rawProfiles from '../missions/characters.json';
+import { CANONICAL_CLIPS, type ClipMap } from '../render/clip-for';
 
 export const GRAVITY = 25;
 
@@ -16,8 +17,16 @@ export interface AbilityProfile {
   canPush: boolean;
   canReveal: boolean;
   canSmash: boolean;
+  /** Scossa elettrica: resta solo nel profilo (nessun effetto in gioco per ora). */
+  canShock?: boolean;
   /** Tinta del modello (esadecimale) oppure null per i colori originali. */
   colore: string | null;
+  /** Modello 3D sotto `assets/`; se assente si usa Golden. */
+  modello?: string;
+  /** Dalle clip logiche del gioco alla clip nel file, con un fattore di velocità. */
+  clip?: ClipMap;
+  /** Altezza in metri a cui il modello resta sospeso sopra il suolo (solo visiva). */
+  fluttua?: number;
 }
 
 function num(o: Record<string, unknown>, k: string, ctx: string): number {
@@ -32,6 +41,28 @@ function bool(o: Record<string, unknown>, k: string, ctx: string): boolean {
   if (typeof v !== 'boolean')
     throw new Error(`Profilo ${ctx}: il campo "${k}" manca o non è vero/falso`);
   return v;
+}
+
+function optionalClipMap(o: Record<string, unknown>, ctx: string): ClipMap | undefined {
+  const v = o.clip;
+  if (v === undefined) return undefined;
+  if (typeof v !== 'object' || v === null || Array.isArray(v))
+    throw new Error(`Profilo ${ctx}: il campo "clip" deve essere un oggetto`);
+  const out: ClipMap = {};
+  for (const [key, spec] of Object.entries(v)) {
+    const logica = CANONICAL_CLIPS.find((c) => c === key);
+    if (!logica) throw new Error(`Profilo ${ctx}: clip logica sconosciuta "${key}"`);
+    const s = spec as Record<string, unknown> | null;
+    if (typeof s !== 'object' || s === null || typeof s.nome !== 'string' || s.nome === '')
+      throw new Error(`Profilo ${ctx}: la clip "${key}" deve avere un "nome" di testo`);
+    const velocita = s.velocita ?? 1;
+    if (typeof velocita !== 'number' || !Number.isFinite(velocita) || velocita < 0)
+      throw new Error(
+        `Profilo ${ctx}: la "velocita" della clip "${key}" deve essere un numero >= 0`,
+      );
+    out[logica] = { nome: s.nome, velocita };
+  }
+  return out;
 }
 
 /** Valida a mano il JSON dei profili; errore chiaro in italiano se qualcosa non va. */
@@ -49,7 +80,22 @@ export function loadProfiles(raw: unknown = rawProfiles): AbilityProfile[] {
     const colore = o.colore;
     if (colore !== null && typeof colore !== 'string')
       throw new Error(`Profilo ${ctx}: il campo "colore" manca (testo o null)`);
+    const extra: Partial<AbilityProfile> = {};
+    if (o.canShock !== undefined) extra.canShock = bool(o, 'canShock', ctx);
+    if (o.modello !== undefined) {
+      if (typeof o.modello !== 'string' || o.modello === '')
+        throw new Error(`Profilo ${ctx}: il campo "modello" deve essere un percorso di testo`);
+      extra.modello = o.modello;
+    }
+    const clip = optionalClipMap(o, ctx);
+    if (clip) extra.clip = clip;
+    if (o.fluttua !== undefined) {
+      if (typeof o.fluttua !== 'number' || !Number.isFinite(o.fluttua) || o.fluttua < 0)
+        throw new Error(`Profilo ${ctx}: il campo "fluttua" deve essere un numero >= 0`);
+      extra.fluttua = o.fluttua;
+    }
     return {
+      ...extra,
       id: o.id,
       nome: o.nome,
       corsa: num(o, 'corsa', ctx),
