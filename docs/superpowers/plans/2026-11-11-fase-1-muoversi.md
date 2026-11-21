@@ -24,16 +24,21 @@ di 1/60 s. Nessun motore di fisica: cilindro verticale contro scatole allineate 
   | id | corsa m/s | salto m | vite | abilità | colore |
   |---|---|---|---|---|---|
   | golden | 6 | 1,2 | 3 | — | originale |
-  | ninja | 7 | 2,0 | 3 | — | rosso |
+  | ninja | 7 | 2,0 | 3 | — | originale (modello Tripo) |
   | golem | 5 | 1,0 | 4 | `canPush` | grigio pietra |
-  | mago | 6 | 1,2 | 3 | `canReveal` | blu |
+  | mago | 6 | 1,2 | 3 | `canReveal` | originale (modello Tripo) |
   | vichinga | 6 | 1,2 | 3 | `canSmash` | arancio |
   | titano | 5,5 | 1,4 | 4 | `canShock` | originale |
 
-  Camminata 2,5 m/s e accovacciato 2 m/s per tutti. I quattro segnaposto usano il modello di Golden tinto.
+  Camminata 2,5 m/s e accovacciato 2 m/s per tutti. Golem e Vichinga sono ancora segnaposto: usano il modello di Golden tinto.
   Il Titano elettrico (`?pg=titano`) ha il modello Tripo vero (`characters/titano.glb`, senza gambe, fluttua a 0,25 m con
   oscillazione di ±0,06 m): mancano le clip idle e run, quindi idle è `walk.001` ferma su una posa e run è `walk.001`
   accelerata (x2); jump e fall usano `jump.001`, hit usa la caduta all'indietro accelerata (x3).
+  Ninja e Mago hanno il modello vero (`characters/ninja.glb`, `characters/mago.glb`, scheletro Mixamo, già animati, colori
+  originali, piedi a terra): il profilo mappa le clip con velocità, `sulPosto` toglie lo spostamento in avanti del bacino
+  dalle clip di corsa e camminata, `jump` e `fall` condividono il tratto 0-0,27 s del salto. Il Ninja ha anche le clip
+  `walk`, `crouch` (accovacciarsi dal secondo 0,8, ferma sull'ultima posa) e `crouchWalk` (altezza corretta con
+  `scalaAccovacciato`): con le clip da accovacciato il modello non si schiaccia. Il Mago non le ha e si schiaccia come Golden.
   `canReveal` e `canSmash` restano solo nel profilo: i loro elementi arrivano con la missione (fasi 2 e 6).
 - **Palestra** (misure scelte sui profili): fossato stretto 2 m (tutti), fossato largo 5,5 m (solo Ninja), gradino 0,3 m
   (si sale camminando), gradino 0,8 m (saltando), muro 1,6 m (solo Ninja), muro 3 m (nessuno), passaggio basso con luce

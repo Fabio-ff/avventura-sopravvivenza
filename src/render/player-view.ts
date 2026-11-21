@@ -10,13 +10,15 @@ import {
 import type { AbilityProfile } from '../player/profiles';
 import { groundBelow, type Solid } from '../world/solids';
 import { CharacterView } from './character-view';
-import type { CharacterState } from './clip-for';
+import type { CanonicalClip, CharacterState } from './clip-for';
 import { instantiate, loadCharacterModel } from './model-cache';
 
 /** Altezza del personaggio nella scena, in metri. */
 const MODEL_HEIGHT = STAND_HEIGHT;
 const TURN_RATE = 14;
 const SQUASH_RATE = 18;
+/** Sopra questa velocità orizzontale (m/s) il giocatore risulta in movimento. */
+const MOVING_SPEED = 0.1;
 const PLACEHOLDER_COLOR = 0xf2c14e;
 /** Oscillazione verticale di chi fluttua: ampiezza in metri e periodo in secondi. */
 const HOVER_AMPLITUDE = 0.06;
@@ -34,17 +36,30 @@ export function hoverOffset(fluttua: number | undefined, t: number, crouching = 
 
 export interface ViewParams {
   state: CharacterState;
-  /** Velocità dell'animazione (la camminata è la corsa rallentata). */
+  /** Velocità dell'animazione (senza clip `walk`, la camminata è la corsa rallentata). */
   timeScale: number;
-  /** Scala verticale del modello (accovacciato = schiacciato). */
+  /** Scala verticale del modello (accovacciato senza clip dedicate = schiacciato). */
   squash: number;
 }
 
-/** Dalla modalità del giocatore alla clip, alla velocità e alla scala. */
-export function viewParamsFor(mode: PlayerMode): ViewParams {
+const NO_CLIPS: ReadonlySet<CanonicalClip> = new Set<CanonicalClip>();
+const SQUASHED = CROUCH_HEIGHT / STAND_HEIGHT;
+
+/**
+ * Dalla modalità del giocatore (e se si sta muovendo) alla clip, alla velocità e alla scala, date le
+ * clip del modello. Ripieghi: senza `walk` la corsa rallentata; accovacciato in movimento senza
+ * `crouchWalk` usa `crouch`; senza clip da accovacciato idle schiacciato.
+ */
+export function viewParamsFor(
+  mode: PlayerMode,
+  moving = false,
+  available: ReadonlySet<CanonicalClip> = NO_CLIPS,
+): ViewParams {
   switch (mode) {
     case 'cammina':
-      return { state: 'run', timeScale: 0.45, squash: 1 };
+      return available.has('walk')
+        ? { state: 'walk', timeScale: 1, squash: 1 }
+        : { state: 'run', timeScale: 0.45, squash: 1 };
     case 'corre':
       return { state: 'run', timeScale: 1, squash: 1 };
     case 'salta':
@@ -54,7 +69,10 @@ export function viewParamsFor(mode: PlayerMode): ViewParams {
     case 'colpito':
       return { state: 'hit', timeScale: 1, squash: 1 };
     case 'accovacciato':
-      return { state: 'idle', timeScale: 1, squash: CROUCH_HEIGHT / STAND_HEIGHT };
+      if (moving && available.has('crouchWalk'))
+        return { state: 'crouchWalk', timeScale: 1, squash: 1 };
+      if (available.has('crouch')) return { state: 'crouch', timeScale: 1, squash: 1 };
+      return { state: 'idle', timeScale: 1, squash: SQUASHED };
     default:
       return { state: 'idle', timeScale: 1, squash: 1 };
   }
@@ -147,6 +165,8 @@ export class PlayerView {
     private readonly fluttua: number,
     /** Id del personaggio se il modello è caricato ('golden' per i segnaposto tinti), altrimenti 'segnaposto'. */
     readonly kind: string,
+    /** Scala verticale con le clip da accovacciato (1 = nessuna correzione). */
+    private readonly crouchScale = 1,
   ) {
     this.body.add(model);
     this.group.add(this.body, this.shadow);
@@ -173,10 +193,11 @@ export class PlayerView {
         normalize(model.scene);
         prepareMaterials(model.scene, profile.colore ?? undefined);
         return new PlayerView(
-          new CharacterView(model, profile.clip),
+          new CharacterView(model, profile.clip, profile.sulPosto),
           model.scene,
           profile.fluttua ?? 0,
           profile.modello ? profile.id : 'golden',
+          profile.scalaAccovacciato ?? 1,
         );
       }
     } catch (error) {
@@ -212,7 +233,8 @@ export class PlayerView {
   }
 
   update(state: PlayerState, solids: readonly Solid[], dt: number): void {
-    const params = viewParamsFor(state.mode);
+    const moving = Math.hypot(state.velocity.x, state.velocity.z) > MOVING_SPEED;
+    const params = viewParamsFor(state.mode, moving, this.character?.availableClips);
     const p = state.position;
     this.group.position.set(p.x, p.y, p.z);
 
@@ -221,7 +243,9 @@ export class PlayerView {
         ? state.facing
         : approachAngle(this.heading, state.facing, TURN_RATE, dt);
     this.body.rotation.y = this.heading;
-    this.squash += (params.squash - this.squash) * (1 - Math.exp(-SQUASH_RATE * dt));
+    // la correzione di altezza serve solo alla clip da accovacciato in movimento (più alta della posa ferma)
+    const targetSquash = params.state === 'crouchWalk' ? this.crouchScale : params.squash;
+    this.squash += (targetSquash - this.squash) * (1 - Math.exp(-SQUASH_RATE * dt));
     this.body.scale.y = this.squash;
     this.time += dt;
     this.body.position.y = hoverOffset(this.fluttua, this.time, state.crouching);

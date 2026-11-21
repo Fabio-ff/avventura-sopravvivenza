@@ -125,6 +125,20 @@ async function run() {
   if (readyTitano !== 'titano')
     throw new Error(`?pg=titano: data-ready=${readyTitano}, atteso titano`);
 
+  // Con ?pg=ninja e ?pg=mago si carica il modello proprio (non quello di Golden né il segnaposto).
+  for (const id of ['ninja', 'mago']) {
+    const altro = await browser.newPage({ viewport: { width: 640, height: 360 } });
+    altro.on('console', (m) => {
+      if (m.type() === 'error') errors.push(m.text());
+    });
+    altro.on('pageerror', (e) => errors.push(String(e)));
+    await altro.goto(`${BASE}?pg=${id}`);
+    await altro.waitForSelector('body[data-ready]', { timeout: 30_000 });
+    const readyAltro = await altro.evaluate(() => document.body.dataset.ready);
+    if (readyAltro !== id) throw new Error(`?pg=${id}: data-ready=${readyAltro}, atteso ${id}`);
+    await altro.close();
+  }
+
   // Il Golem parte con 4 vite.
   const golem = await browser.newPage({ viewport: { width: 640, height: 360 } });
   golem.on('console', (m) => {

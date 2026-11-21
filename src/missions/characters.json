@@ -29,7 +29,49 @@
     "canPush": false,
     "canReveal": false,
     "canSmash": false,
-    "colore": "#d32f2f"
+    "colore": null,
+    "modello": "characters/ninja.glb",
+    "sulPosto": true,
+    "scalaAccovacciato": 0.84,
+    "clip": {
+      "idle": {
+        "nome": "idle",
+        "velocita": 1
+      },
+      "run": {
+        "nome": "run",
+        "velocita": 1.67
+      },
+      "walk": {
+        "nome": "walk",
+        "velocita": 2.17
+      },
+      "jump": {
+        "nome": "jump",
+        "velocita": 0.8,
+        "inizio": 0,
+        "fine": 0.27
+      },
+      "fall": {
+        "nome": "jump",
+        "velocita": 1,
+        "inizio": 0,
+        "fine": 0.27
+      },
+      "hit": {
+        "nome": "hit_to_body_02",
+        "velocita": 4.5
+      },
+      "crouch": {
+        "nome": "accovacciarsi",
+        "velocita": 2.5,
+        "inizio": 0.8
+      },
+      "crouchWalk": {
+        "nome": "cammina accovacciato",
+        "velocita": 2
+      }
+    }
   },
   {
     "id": "golem",
@@ -61,7 +103,35 @@
     "canPush": false,
     "canReveal": true,
     "canSmash": false,
-    "colore": "#1e5bd8"
+    "colore": null,
+    "modello": "characters/mago.glb",
+    "sulPosto": true,
+    "clip": {
+      "idle": {
+        "nome": "idle",
+        "velocita": 1
+      },
+      "run": {
+        "nome": "run",
+        "velocita": 1.68
+      },
+      "jump": {
+        "nome": "jump",
+        "velocita": 0.8,
+        "inizio": 0,
+        "fine": 0.27
+      },
+      "fall": {
+        "nome": "jump",
+        "velocita": 1,
+        "inizio": 0,
+        "fine": 0.27
+      },
+      "hit": {
+        "nome": "hit_to_body_01",
+        "velocita": 3.5
+      }
+    }
   },
   {
     "id": "vichinga",

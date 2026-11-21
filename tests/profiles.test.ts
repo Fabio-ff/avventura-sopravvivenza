@@ -46,8 +46,25 @@ describe('profilo titano', () => {
     expect(t.clip?.run).toEqual({ nome: 'walk.001', velocita: 2 });
     expect(t.clip?.idle?.velocita).toBe(0);
   });
+  it('ninja e mago hanno il modello vero, senza tinta né fluttuazione, e valori di gioco invariati', () => {
+    const n = profileFor('ninja');
+    expect(n).toMatchObject({ corsa: 7, camminata: 2.5, accovacciato: 2, salto: 2, vite: 3 });
+    expect(n.modello).toBe('characters/ninja.glb');
+    expect(n.colore).toBeNull();
+    expect(n.fluttua).toBeUndefined();
+    expect(n.clip?.walk?.nome).toBe('walk');
+    expect(n.clip?.crouch?.nome).toBe('accovacciarsi');
+    expect(n.clip?.crouchWalk?.nome).toBe('cammina accovacciato');
+    const m = profileFor('mago');
+    expect(m).toMatchObject({ corsa: 6, salto: 1.2, vite: 3, canReveal: true });
+    expect(m.modello).toBe('characters/mago.glb');
+    expect(m.colore).toBeNull();
+    expect(m.clip?.walk).toBeUndefined();
+    expect(m.clip?.crouch).toBeUndefined();
+    expect(m.clip?.crouchWalk).toBeUndefined();
+  });
   it('golden e i segnaposto non hanno campi nuovi', () => {
-    for (const id of ['golden', 'ninja', 'golem', 'mago', 'vichinga']) {
+    for (const id of ['golden', 'golem', 'vichinga']) {
       const p = profileFor(id);
       expect(p.modello).toBeUndefined();
       expect(p.clip).toBeUndefined();
