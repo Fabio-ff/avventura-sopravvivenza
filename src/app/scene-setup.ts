@@ -1,8 +1,7 @@
 // Renderer, luci, nebbia, WebGL mancante e contesto perso. Budget tablet: niente ombre dinamiche.
 import * as THREE from 'three';
 import { rendererSettings } from '../render/renderer-settings';
-
-const SKY = 0x9ad4f5;
+import { COLORE_CIELO, COLORE_FOSCHIA } from '../world/ambiente';
 
 export interface SceneContext {
   renderer: THREE.WebGLRenderer;
@@ -51,26 +50,17 @@ export function createSceneContext(app: HTMLElement): SceneContext | null {
   });
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(SKY);
-  scene.fog = new THREE.Fog(SKY, 25, 90);
+  scene.background = new THREE.Color(COLORE_CIELO);
+  scene.fog = new THREE.Fog(COLORE_FOSCHIA, 25, 90);
 
   // Luce: ambiente + sole + riempimento frontale sul volto (senza, il volto resta scuro).
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x6fae5a, 1.4));
-  const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+  scene.add(new THREE.HemisphereLight(0xfff4e0, 0x5fae4a, 1.5));
+  const sun = new THREE.DirectionalLight(0xfff0c4, 1.7);
   sun.position.set(4, 8, 5);
   scene.add(sun);
   const fill = new THREE.DirectionalLight(0xfff2e0, 1.4);
   fill.position.set(-1, 2, 6);
   scene.add(fill);
-
-  // Fondo lontano sotto i fossati (si cade sotto y = -4), così non si vede il cielo sotto i piedi.
-  const abyss = new THREE.Mesh(
-    new THREE.PlaneGeometry(400, 400),
-    new THREE.MeshStandardMaterial({ color: 0x3f6b35 }),
-  );
-  abyss.rotation.x = -Math.PI / 2;
-  abyss.position.y = -3.5;
-  scene.add(abyss);
 
   const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
 

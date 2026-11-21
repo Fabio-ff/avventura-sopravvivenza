@@ -2,6 +2,12 @@
 import * as THREE from 'three';
 import { createMover, placeMover, validateMoto, type Moto, type Mover } from './movers';
 import { box, type Solid, type SolidKind, type Vec3 } from './solids';
+import { worldBoxUVs } from './uv-mondo';
+import type { Rettangolo } from './vegetazione';
+
+/** Texture disponibili per le scatole; senza `materiale` la scatola è a tinta unita. */
+export type Materiale = 'erba' | 'pietra' | 'muro';
+export const MATERIALI: readonly Materiale[] = ['erba', 'pietra', 'muro'];
 
 export interface LevelBox {
   id: number;
@@ -12,6 +18,8 @@ export interface LevelBox {
   /** Dimensioni complete. */
   dimensioni: Vec3;
   colore: string;
+  /** Facoltativo: texture della scatola (il colore la tinge leggermente). */
+  materiale?: Materiale;
   /** Facoltativo, solo per i `pericolo`: la scatola va avanti e indietro (posizione = centro del moto). */
   moto?: Moto;
 }
@@ -68,6 +76,11 @@ export function validateLevel(raw: unknown): LevelData {
       dimensioni,
       colore: o.colore,
     };
+    if (o.materiale !== undefined) {
+      if (typeof o.materiale !== 'string' || !MATERIALI.includes(o.materiale as Materiale))
+        throw new Error(`${ctx}: il materiale deve essere erba, pietra o muro`);
+      out.materiale = o.materiale as Materiale;
+    }
     if (o.moto !== undefined) {
       if (o.tipo !== 'pericolo') throw new Error(`${ctx}: solo un pericolo può avere un "moto"`);
       out.moto = validateMoto(o.moto, ctx);
@@ -78,6 +91,18 @@ export function validateLevel(raw: unknown): LevelData {
   if (!standsOnSlab(toSolids(level), partenza))
     throw new Error('Livello: il punto di partenza deve stare sopra una lastra (scatola fissa)');
   return level;
+}
+
+/** Rettangolo (x, z) che racchiude tutte le scatole del livello. */
+export function perimetroLivello(level: LevelData): Rettangolo {
+  const r = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
+  for (const b of level.scatole) {
+    r.minX = Math.min(r.minX, b.posizione.x - b.dimensioni.x / 2);
+    r.maxX = Math.max(r.maxX, b.posizione.x + b.dimensioni.x / 2);
+    r.minZ = Math.min(r.minZ, b.posizione.z - b.dimensioni.z / 2);
+    r.maxZ = Math.max(r.maxZ, b.posizione.z + b.dimensioni.z / 2);
+  }
+  return r;
 }
 
 function standsOnSlab(solids: readonly Solid[], p: Vec3): boolean {
@@ -139,8 +164,17 @@ export function buildLevel(level: LevelData): BuiltLevel {
   const geometry = new THREE.BoxGeometry(1, 1, 1);
   level.scatole.forEach((b, i) => {
     const solid = solids[i]!;
+    // Le scatole con texture hanno UV in scala mondo, quindi una geometria propria.
+    let boxGeometry = geometry;
+    if (b.materiale) {
+      boxGeometry = geometry.clone();
+      boxGeometry.setAttribute(
+        'uv',
+        new THREE.BufferAttribute(worldBoxUVs(b.posizione, b.dimensioni), 2),
+      );
+    }
     const mesh = new THREE.Mesh(
-      geometry,
+      boxGeometry,
       new THREE.MeshStandardMaterial({ color: new THREE.Color(b.colore) }),
     );
     mesh.scale.set(b.dimensioni.x, b.dimensioni.y, b.dimensioni.z);
