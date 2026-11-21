@@ -136,6 +136,11 @@ async function run() {
     await altro.waitForSelector('body[data-ready]', { timeout: 30_000 });
     const readyAltro = await altro.evaluate(() => document.body.dataset.ready);
     if (readyAltro !== id) throw new Error(`?pg=${id}: data-ready=${readyAltro}, atteso ${id}`);
+    // Solo il Mago tiene in mano il bastone.
+    const accessorio = await altro.evaluate(() => document.body.dataset.accessorio ?? null);
+    const atteso = id === 'mago' ? 'bastone' : null;
+    if (accessorio !== atteso)
+      throw new Error(`?pg=${id}: data-accessorio=${accessorio}, atteso ${atteso}`);
     await altro.close();
   }
 

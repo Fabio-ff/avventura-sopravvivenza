@@ -9,6 +9,7 @@ import {
 } from '../player/controller';
 import type { AbilityProfile } from '../player/profiles';
 import { groundBelow, type Solid } from '../world/solids';
+import { attaccaAccessorio } from './accessorio';
 import { CharacterView } from './character-view';
 import type { CanonicalClip, CharacterState } from './clip-for';
 import { instantiate, loadCharacterModel } from './model-cache';
@@ -142,7 +143,26 @@ function createBlobShadow(): THREE.Mesh {
   return mesh;
 }
 
+/** Oggetto in mano del profilo: se il modello non si carica o l'osso manca, nessun oggetto e nessun errore. */
+async function attachHeld(root: THREE.Object3D, profile: AbilityProfile): Promise<string | null> {
+  const acc = profile.accessorio;
+  if (!acc) return null;
+  try {
+    const loaded = await loadCharacterModel(acc.modello);
+    if (!loaded) return null;
+    const item = instantiate(loaded).scene;
+    const size = new THREE.Box3().setFromObject(item).getSize(new THREE.Vector3());
+    prepareMaterials(item);
+    return attaccaAccessorio(root, item, size.y, acc) ? acc.modello : null;
+  } catch (error) {
+    console.warn('[accessorio] non attaccato per', acc.modello, error);
+    return null;
+  }
+}
+
 export class PlayerView {
+  /** Modello dell'oggetto in mano, se attaccato. */
+  heldKind: string | null = null;
   /** Da aggiungere alla scena: contiene personaggio e ombra. */
   readonly group = new THREE.Group();
   private readonly body = new THREE.Group();
@@ -192,13 +212,16 @@ export class PlayerView {
         const model = instantiate(loaded);
         normalize(model.scene);
         prepareMaterials(model.scene, profile.colore ?? undefined);
-        return new PlayerView(
+        const inMano = await attachHeld(model.scene, profile);
+        const view = new PlayerView(
           new CharacterView(model, profile.clip, profile.sulPosto),
           model.scene,
           profile.fluttua ?? 0,
           profile.modello ? profile.id : 'golden',
           profile.scalaAccovacciato ?? 1,
         );
+        view.heldKind = inMano;
+        return view;
       }
     } catch (error) {
       console.warn('[model] segnaposto per', file, error);

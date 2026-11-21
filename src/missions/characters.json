@@ -106,6 +106,13 @@
     "colore": null,
     "modello": "characters/mago.glb",
     "sulPosto": true,
+    "accessorio": {
+      "modello": "props/bastone-mago.glb",
+      "osso": "mixamorig:RightHand",
+      "lunghezza": 1.7,
+      "posizione": [-0.137, 0.712, -0.183],
+      "rotazione": [133.1, -69.1, -33.3]
+    },
     "clip": {
       "idle": {
         "nome": "idle",
