@@ -108,6 +108,7 @@ async function start(): Promise<void> {
   };
   writePos();
   document.body.dataset.ready = view.kind;
+  if (view.heldKind) document.body.dataset.accessorio = 'bastone';
 
   const jumpLatch = new JumpLatch();
   /** Dopo un rientro i comandi di movimento restano ignorati finché la leva non torna a riposo. */

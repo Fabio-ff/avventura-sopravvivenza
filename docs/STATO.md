@@ -61,3 +61,4 @@ Tetto: 15 euro per l'intero gioco; avviso a Fabio prima di superare 10 euro stim
 |---|---|---|---|---|
 | 2026-11-10 | Prova: ingresso del tempio con scimmie | flash, 1K | 1 | pochi centesimi |
 | 2026-11-21 | Mago: riferimento in posa a T per il rig di Tripo, bastone da solo | flash, 1K | 2 | pochi centesimi |
+| 2026-11-21 | Mago: ritratto nuovo per il menu | flash, 1K | 1 | pochi centesimi |

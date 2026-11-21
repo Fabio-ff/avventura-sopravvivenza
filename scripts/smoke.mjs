@@ -69,12 +69,20 @@ async function run() {
 
   // In gioco il pulsante "Personaggi" vuole due tocchi: il primo chiede conferma, il secondo torna al menu.
   await page.click('.menu-back');
-  if ((await page.locator('.menu-back').textContent()) !== 'Torna al menu?')
-    throw new Error('pulsante: manca la conferma al primo tocco');
+  // su una macchina lenta l'etichetta può cambiare in ritardo: si attende prima del secondo tocco
+  await page
+    .waitForFunction(
+      () => document.querySelector('.menu-back')?.textContent === 'Torna al menu?',
+      undefined,
+      { timeout: 5_000 },
+    )
+    .catch(() => {
+      throw new Error('pulsante: manca la conferma al primo tocco');
+    });
   if ((await page.locator('.menu-card').count()) !== 0)
     throw new Error('pulsante: il primo tocco ha già riportato al menu');
   await page.click('.menu-back');
-  await page.waitForSelector('.menu-card');
+  await page.waitForSelector('.menu-card', { timeout: 30_000 });
   if (new URL(page.url()).searchParams.has('pg'))
     throw new Error(`pulsante: pg ancora in ${page.url()}`);
 
@@ -136,6 +144,11 @@ async function run() {
     await altro.waitForSelector('body[data-ready]', { timeout: 30_000 });
     const readyAltro = await altro.evaluate(() => document.body.dataset.ready);
     if (readyAltro !== id) throw new Error(`?pg=${id}: data-ready=${readyAltro}, atteso ${id}`);
+    // Solo il Mago tiene in mano il bastone.
+    const accessorio = await altro.evaluate(() => document.body.dataset.accessorio ?? null);
+    const atteso = id === 'mago' ? 'bastone' : null;
+    if (accessorio !== atteso)
+      throw new Error(`?pg=${id}: data-accessorio=${accessorio}, atteso ${atteso}`);
     await altro.close();
   }
 

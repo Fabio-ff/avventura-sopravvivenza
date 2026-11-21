@@ -4,6 +4,20 @@ import { ALL_CLIPS, type ClipMap, type ClipSpec } from '../render/clip-for';
 
 export const GRAVITY = 25;
 
+/** Oggetto tenuto in mano: un modello statico attaccato a un osso dello scheletro. */
+export interface Accessorio {
+  /** Modello 3D sotto `assets/`. */
+  modello: string;
+  /** Nome dell'osso (anche con i due punti di Mixamo: la ricerca ignora la punteggiatura). */
+  osso: string;
+  /** Altezza voluta dell'oggetto nel mondo, in metri. */
+  lunghezza: number;
+  /** Posizione locale rispetto all'osso, in metri del mondo. */
+  posizione: [number, number, number];
+  /** Rotazione locale rispetto all'osso (Euler XYZ), in gradi. */
+  rotazione: [number, number, number];
+}
+
 export interface AbilityProfile {
   id: string;
   nome: string;
@@ -37,6 +51,39 @@ export interface AbilityProfile {
   scalaAccovacciato?: number;
   /** Altezza in metri a cui il modello resta sospeso sopra il suolo (solo visiva). */
   fluttua?: number;
+  /** Oggetto in mano (per ora il bastone del Mago). */
+  accessorio?: Accessorio;
+}
+
+function terna(v: unknown, k: string, ctx: string): [number, number, number] {
+  if (
+    !Array.isArray(v) ||
+    v.length !== 3 ||
+    v.some((n) => typeof n !== 'number' || !Number.isFinite(n))
+  )
+    throw new Error(`Profilo ${ctx}: "accessorio.${k}" deve essere una terna di numeri`);
+  return [v[0] as number, v[1] as number, v[2] as number];
+}
+
+function optionalAccessorio(o: Record<string, unknown>, ctx: string): Accessorio | undefined {
+  const v = o.accessorio;
+  if (v === undefined) return undefined;
+  if (typeof v !== 'object' || v === null || Array.isArray(v))
+    throw new Error(`Profilo ${ctx}: il campo "accessorio" deve essere un oggetto`);
+  const a = v as Record<string, unknown>;
+  for (const campo of ['modello', 'osso'] as const)
+    if (typeof a[campo] !== 'string' || a[campo] === '')
+      throw new Error(`Profilo ${ctx}: "accessorio.${campo}" deve essere un testo`);
+  const lunghezza = a.lunghezza;
+  if (typeof lunghezza !== 'number' || !Number.isFinite(lunghezza) || lunghezza <= 0)
+    throw new Error(`Profilo ${ctx}: "accessorio.lunghezza" deve essere un numero positivo`);
+  return {
+    modello: a.modello as string,
+    osso: a.osso as string,
+    lunghezza,
+    posizione: terna(a.posizione, 'posizione', ctx),
+    rotazione: terna(a.rotazione, 'rotazione', ctx),
+  };
 }
 
 function num(o: Record<string, unknown>, k: string, ctx: string): number {
@@ -140,6 +187,8 @@ export function loadProfiles(raw: unknown = rawProfiles): AbilityProfile[] {
         throw new Error(`Profilo ${ctx}: il campo "fluttua" deve essere un numero >= 0`);
       extra.fluttua = o.fluttua;
     }
+    const accessorio = optionalAccessorio(o, ctx);
+    if (accessorio) extra.accessorio = accessorio;
     return {
       ...extra,
       id: o.id,
