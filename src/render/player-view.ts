@@ -153,6 +153,17 @@ async function attachHeld(root: THREE.Object3D, profile: AbilityProfile): Promis
     const item = instantiate(loaded).scene;
     const size = new THREE.Box3().setFromObject(item).getSize(new THREE.Vector3());
     prepareMaterials(item);
+    // senza mappa d'ambiente un materiale metallico resta quasi nero: lo si illumina con le luci
+    item.traverse((o) => {
+      if (!(o instanceof THREE.Mesh)) return;
+      for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+        if (m instanceof THREE.MeshStandardMaterial) {
+          m.metalness = 0;
+          m.metalnessMap = null;
+        }
+        if (m instanceof THREE.MeshPhysicalMaterial) m.transmission = 0;
+      }
+    });
     return attaccaAccessorio(root, item, size.y, acc) ? acc.modello : null;
   } catch (error) {
     console.warn('[accessorio] non attaccato per', acc.modello, error);
