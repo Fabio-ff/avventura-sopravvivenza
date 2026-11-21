@@ -33,7 +33,15 @@ import { PlayerView } from './render/player-view';
 import { showCharacterMenu, showMenuButton } from './ui/character-menu';
 import { FpsCounter } from './ui/debug-overlay';
 import { screenFor } from './ui/menu-logic';
-import { buildLevel, validateLevel, type BuiltLevel } from './world/build-level';
+import { createAmbiente } from './world/ambiente';
+import {
+  buildLevel,
+  perimetroLivello,
+  validateLevel,
+  type BuiltLevel,
+  type LevelData,
+} from './world/build-level';
+import { applyTextures, loadLevelTextures } from './world/materiali';
 import { knockOrigin } from './world/movers';
 import type { Solid } from './world/solids';
 
@@ -69,8 +77,10 @@ async function start(): Promise<void> {
 
   // Per ora esiste un solo livello (`options.level` vale sempre "palestra").
   let level: BuiltLevel;
+  let levelData: LevelData;
   try {
-    level = buildLevel(validateLevel(levelJson));
+    levelData = validateLevel(levelJson);
+    level = buildLevel(levelData);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     console.error(error);
@@ -78,6 +88,13 @@ async function start(): Promise<void> {
     return;
   }
   scene.add(level.group);
+  // Ambientazione: solo aspetto. Le texture arrivano dopo; se mancano il livello resta a tinta unita.
+  const ambiente = createAmbiente(perimetroLivello(levelData));
+  scene.add(ambiente.group);
+  void loadLevelTextures(Math.min(4, renderer.capabilities.getMaxAnisotropy())).then((set) =>
+    applyTextures(levelData, level.meshes, set),
+  );
+  let tempo = 0;
 
   const player = createPlayer(level.start);
   // Alla partenza si guarda verso il percorso (-z), non verso la camera.
@@ -206,6 +223,8 @@ async function start(): Promise<void> {
       writePos();
     }
     counter?.update(rawDt);
+    tempo += dt;
+    ambiente.update(tempo, camera.position);
     renderer.render(scene, camera);
   });
   loop.start();
