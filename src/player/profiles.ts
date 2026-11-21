@@ -1,6 +1,6 @@
 // Profili dei personaggi giocabili (valori in src/missions/characters.json).
 import rawProfiles from '../missions/characters.json';
-import { CANONICAL_CLIPS, type ClipMap } from '../render/clip-for';
+import { ALL_CLIPS, type ClipMap, type ClipSpec } from '../render/clip-for';
 
 export const GRAVITY = 25;
 
@@ -31,6 +31,10 @@ export interface AbilityProfile {
   modello?: string;
   /** Dalle clip logiche del gioco alla clip nel file, con un fattore di velocità. */
   clip?: ClipMap;
+  /** Le clip di corsa e camminata perdono lo spostamento in avanti del bacino (modelli Mixamo). */
+  sulPosto?: boolean;
+  /** Scala verticale (0..1) del modello con le clip da accovacciato, solo se la posa è troppo alta. */
+  scalaAccovacciato?: number;
   /** Altezza in metri a cui il modello resta sospeso sopra il suolo (solo visiva). */
   fluttua?: number;
 }
@@ -56,7 +60,7 @@ function optionalClipMap(o: Record<string, unknown>, ctx: string): ClipMap | und
     throw new Error(`Profilo ${ctx}: il campo "clip" deve essere un oggetto`);
   const out: ClipMap = {};
   for (const [key, spec] of Object.entries(v)) {
-    const logica = CANONICAL_CLIPS.find((c) => c === key);
+    const logica = ALL_CLIPS.find((c) => c === key);
     if (!logica) throw new Error(`Profilo ${ctx}: clip logica sconosciuta "${key}"`);
     const s = spec as Record<string, unknown> | null;
     if (typeof s !== 'object' || s === null || typeof s.nome !== 'string' || s.nome === '')
@@ -66,7 +70,23 @@ function optionalClipMap(o: Record<string, unknown>, ctx: string): ClipMap | und
       throw new Error(
         `Profilo ${ctx}: la "velocita" della clip "${key}" deve essere un numero >= 0`,
       );
-    out[logica] = { nome: s.nome, velocita };
+    const clipSpec: ClipSpec = { nome: s.nome, velocita };
+    for (const campo of ['inizio', 'fine'] as const) {
+      const t = s[campo];
+      if (t === undefined) continue;
+      if (typeof t !== 'number' || !Number.isFinite(t) || t < 0)
+        throw new Error(
+          `Profilo ${ctx}: "${campo}" della clip "${key}" deve essere un numero >= 0`,
+        );
+      clipSpec[campo] = t;
+    }
+    if (
+      clipSpec.inizio !== undefined &&
+      clipSpec.fine !== undefined &&
+      clipSpec.fine <= clipSpec.inizio
+    )
+      throw new Error(`Profilo ${ctx}: nella clip "${key}" "fine" deve venire dopo "inizio"`);
+    out[logica] = clipSpec;
   }
   return out;
 }
@@ -106,6 +126,15 @@ export function loadProfiles(raw: unknown = rawProfiles): AbilityProfile[] {
     }
     const clip = optionalClipMap(o, ctx);
     if (clip) extra.clip = clip;
+    if (o.sulPosto !== undefined) extra.sulPosto = bool(o, 'sulPosto', ctx);
+    if (o.scalaAccovacciato !== undefined) {
+      const k = o.scalaAccovacciato;
+      if (typeof k !== 'number' || !Number.isFinite(k) || k <= 0 || k > 1)
+        throw new Error(
+          `Profilo ${ctx}: il campo "scalaAccovacciato" deve essere tra 0 (escluso) e 1`,
+        );
+      extra.scalaAccovacciato = k;
+    }
     if (o.fluttua !== undefined) {
       if (typeof o.fluttua !== 'number' || !Number.isFinite(o.fluttua) || o.fluttua < 0)
         throw new Error(`Profilo ${ctx}: il campo "fluttua" deve essere un numero >= 0`);

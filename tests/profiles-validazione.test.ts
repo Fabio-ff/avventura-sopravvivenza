@@ -57,6 +57,38 @@ describe('validazione dei campi del modello', () => {
     p[0].clip = { vola: { nome: 'x' } };
     expect(() => loadProfiles(p)).toThrow(/golden.*vola/);
   });
+  it('clip facoltative walk, crouch, crouchWalk accettate; inizio e fine controllati', () => {
+    const p = base();
+    p[0].clip = {
+      walk: { nome: 'a' },
+      crouch: { nome: 'b', inizio: 0.8, velocita: 2.5 },
+      crouchWalk: { nome: 'c' },
+    };
+    const g = loadProfiles(p)[0];
+    expect(g.clip?.crouch).toEqual({ nome: 'b', velocita: 2.5, inizio: 0.8 });
+    expect(g.clip?.crouchWalk?.velocita).toBe(1);
+    const a = base();
+    a[0].clip = { crouch: { nome: 'b', inizio: -1 } };
+    expect(() => loadProfiles(a)).toThrow(/inizio/);
+    const b = base();
+    b[0].clip = { crouch: { nome: 'b', inizio: 2, fine: 1 } };
+    expect(() => loadProfiles(b)).toThrow(/fine/);
+    const c = base();
+    c[0].clip = { striscia: { nome: 'x' } };
+    expect(() => loadProfiles(c)).toThrow(/striscia/);
+  });
+  it('sulPosto e scalaAccovacciato: tipi controllati', () => {
+    const p = base();
+    p[0].sulPosto = true;
+    p[0].scalaAccovacciato = 0.85;
+    expect(loadProfiles(p)[0]).toMatchObject({ sulPosto: true, scalaAccovacciato: 0.85 });
+    const a = base();
+    a[0].sulPosto = 'si';
+    expect(() => loadProfiles(a)).toThrow(/sulPosto/);
+    const b = base();
+    b[0].scalaAccovacciato = 1.5;
+    expect(() => loadProfiles(b)).toThrow(/scalaAccovacciato/);
+  });
   it('nome mancante o velocità negativa: errore', () => {
     const a = base();
     a[0].clip = { run: {} };

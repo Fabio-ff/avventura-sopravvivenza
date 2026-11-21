@@ -3,6 +3,7 @@ import levelJson from '../src/missions/palestra/level.json';
 import { toSolids, validateLevel } from '../src/world/build-level';
 import { createPlayer, stepPlayer, type PlayerInput } from '../src/player/controller';
 import { jumpReach, profileFor } from '../src/player/profiles';
+import type { CanonicalClip } from '../src/render/clip-for';
 import { viewParamsFor } from '../src/render/player-view';
 import type { Solid } from '../src/world/solids';
 
@@ -135,5 +136,55 @@ describe('viewParamsFor', () => {
     expect(viewParamsFor('colpito').state).toBe('hit');
     expect(viewParamsFor('accovacciato').state).toBe('idle');
     expect(viewParamsFor('accovacciato').squash).toBeLessThan(1);
+  });
+
+  const NINJA = new Set<CanonicalClip>([
+    'idle',
+    'run',
+    'jump',
+    'hit',
+    'fall',
+    'walk',
+    'crouch',
+    'crouchWalk',
+  ]);
+  const MAGO = new Set<CanonicalClip>(['idle', 'run', 'jump', 'hit', 'fall']);
+
+  it('con la clip walk la camminata non è la corsa rallentata', () => {
+    expect(viewParamsFor('cammina', true, NINJA)).toMatchObject({ state: 'walk', timeScale: 1 });
+    expect(viewParamsFor('cammina', true, MAGO)).toMatchObject({ state: 'run', timeScale: 0.45 });
+  });
+  it('accovacciato con clip dedicate: niente schiacciamento', () => {
+    expect(viewParamsFor('accovacciato', false, NINJA)).toEqual({
+      state: 'crouch',
+      timeScale: 1,
+      squash: 1,
+    });
+    expect(viewParamsFor('accovacciato', true, NINJA)).toEqual({
+      state: 'crouchWalk',
+      timeScale: 1,
+      squash: 1,
+    });
+  });
+  it('accovacciato senza clip dedicate: idle schiacciato (Golden, Titano, Mago, segnaposto)', () => {
+    for (const moving of [false, true]) {
+      const v = viewParamsFor('accovacciato', moving, MAGO);
+      expect(v.state).toBe('idle');
+      expect(v.squash).toBeLessThan(1);
+    }
+    expect(viewParamsFor('accovacciato', true).state).toBe('idle');
+  });
+  it('ripieghi parziali: senza crouchWalk si usa crouch; solo crouchWalk da fermo schiaccia', () => {
+    const soloCrouch = new Set<CanonicalClip>(['idle', 'crouch']);
+    expect(viewParamsFor('accovacciato', true, soloCrouch).state).toBe('crouch');
+    const soloWalk = new Set<CanonicalClip>(['idle', 'crouchWalk']);
+    expect(viewParamsFor('accovacciato', false, soloWalk).state).toBe('idle');
+    expect(viewParamsFor('accovacciato', false, soloWalk).squash).toBeLessThan(1);
+    expect(viewParamsFor('accovacciato', true, soloWalk).state).toBe('crouchWalk');
+  });
+  it('le altre modalità non dipendono dalle clip facoltative', () => {
+    for (const mode of ['fermo', 'corre', 'salta', 'cade', 'colpito'] as const) {
+      expect(viewParamsFor(mode, true, NINJA)).toEqual(viewParamsFor(mode, true, MAGO));
+    }
   });
 });
