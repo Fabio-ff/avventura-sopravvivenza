@@ -28,10 +28,15 @@
   vite perse a raffica rientrando dal fossato) e alcuni minori, corretti in PR #13. Spalle al muro la camera resta
   a 4,5 m oltre il muro, che diventa trasparente. 201 test.
 
+- Ninja e Mago con i modelli Tripo veri (PR #14, scheletro Mixamo, clip complete; il Ninja ha anche camminata e
+  accovacciato). Bastone del Mago attaccato alla mano e ritratto nuovo nel menu (PR #15). Il bastone originale
+  (55 MB) è stato ridotto con `npx @gltf-transform/cli` (weld, simplify, resize 512): 4.898 triangoli, 554 KB.
+
 ## Prossimo passo
 - Prova sul tablet della palestra (touch, fps da annotare qui sotto) e momento per Filippo: prova i sei
   personaggi dal menu e decide salti e velocità (`src/missions/characters.json`).
 - Poi piano della fase 2.
+- Restano Golden tinto: Golem e Vichinga (servono i modelli Tripo, in posa a T e con le gambe visibili).
 - Da decidere con Fabio: Golem e Titano hanno lo stesso ritratto nel menu; il masso della palestra si aggira
   (varchi da 3 m, masso da 1 m): farne un vero cancello?
 - Mai provati a mano: touch e multitouch su tablet vero, passaggio sotto l'architrave a schermo, animazione
